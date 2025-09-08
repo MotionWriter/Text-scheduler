@@ -1,0 +1,162 @@
+import { mutation, query } from "./_generated/server";
+import { v } from "convex/values";
+import { internal } from "./_generated/api";
+import { Id } from "./_generated/dataModel";
+
+// Test function to set up delivery system testing
+export const setupDeliveryTest = mutation({
+  handler: async (ctx) => {
+    console.log("Setting up comprehensive delivery system test...");
+    
+    // Step 1: Add phone numbers to existing users
+    const testUserId = "kd73ma7zc6x38bd47yw2691evx7q0x2e" as Id<"users">;
+    const adminUserId = "kd73c52egeyj7q3n0gkqnxatf57q0ram" as Id<"users">;
+    
+    await ctx.db.patch(testUserId, {
+      phone: "+1234567890",
+      name: "Test User"
+    });
+    
+    await ctx.db.patch(adminUserId, {
+      phone: "+1987654321",
+      name: "Admin User"
+    });
+    
+    // Step 2: Create a message scheduled for immediate delivery (30 seconds from now)
+    const lessons = await ctx.db.query("lessons").take(1);
+    const predefinedMessages = await ctx.db.query("predefinedMessages").take(1);
+    
+    if (lessons.length === 0 || predefinedMessages.length === 0) {
+      throw new Error("No lessons or predefined messages found for testing");
+    }
+    
+    const immediateScheduleTime = Date.now() + (30 * 1000); // 30 seconds from now
+    
+    const newMessageId = await ctx.db.insert("userSelectedMessages", {
+      userId: testUserId,
+      predefinedMessageId: predefinedMessages[0]._id,
+      customMessageId: undefined,
+      lessonId: predefinedMessages[0].lessonId,
+      scheduledAt: immediateScheduleTime,
+      isScheduled: true,
+      createdAt: Date.now(),
+    });
+    
+    // Step 3: Create another message for successful delivery test
+    const successScheduleTime = Date.now() + (60 * 1000); // 1 minute from now
+    
+    const successMessageId = await ctx.db.insert("userSelectedMessages", {
+      userId: adminUserId,
+      predefinedMessageId: predefinedMessages[0]._id,
+      customMessageId: undefined, 
+      lessonId: predefinedMessages[0].lessonId,
+      scheduledAt: successScheduleTime,
+      isScheduled: true,
+      createdAt: Date.now(),
+    });
+    
+    return {
+      success: true,
+      testSetup: {
+        usersUpdated: [
+          { userId: testUserId, phone: "+1234567890", name: "Test User" },
+          { userId: adminUserId, phone: "+1987654321", name: "Admin User" }
+        ],
+        messagesCreated: [
+          { 
+            messageId: newMessageId, 
+            scheduledFor: new Date(immediateScheduleTime).toISOString(),
+            content: predefinedMessages[0].content?.substring(0, 50) + "...",
+            userId: testUserId
+          },
+          {
+            messageId: successMessageId,
+            scheduledFor: new Date(successScheduleTime).toISOString(),
+            content: predefinedMessages[0].content?.substring(0, 50) + "...",
+            userId: adminUserId
+          }
+        ],
+        nextSteps: [
+          "Wait 30 seconds then run processScheduledMessages to test immediate delivery",
+          "Check delivery stats to see processing results",
+          "Test admin dashboard for monitoring",
+          "Test user delivery history interface"
+        ]
+      }
+    };
+  }
+});
+
+// Test function to process messages and check results
+export const testDeliveryExecution = mutation({
+  handler: async (ctx): Promise<any> => {
+    console.log("Testing delivery execution...");
+    
+    // Process scheduled messages
+    await ctx.scheduler.runAfter(0, internal.messageScheduler.processScheduledMessages);
+    
+    // Get current delivery stats
+    const stats: any = await ctx.runQuery(internal.messageScheduler.getDeliveryStats, {
+      timeRangeHours: 1
+    });
+    
+    // Get recent messages to check status
+    const recentMessages = await ctx.db
+      .query("userSelectedMessages")
+      .withIndex("by_scheduled_time")
+      .filter(q => q.gt(q.field("scheduledAt"), Date.now() - (2 * 60 * 60 * 1000)))
+      .collect();
+    
+    return {
+      success: true,
+      deliveryStats: stats,
+      recentMessages: recentMessages.map(msg => ({
+        id: msg._id,
+        userId: msg.userId,
+        scheduledAt: new Date(msg.scheduledAt || 0).toISOString(),
+        deliveryStatus: msg.deliveryStatus || "unprocessed",
+        deliveryAttempts: msg.deliveryAttempts || 0,
+        deliveryError: msg.deliveryError,
+        actualDeliveryTime: msg.actualDeliveryTime ? new Date(msg.actualDeliveryTime).toISOString() : null
+      }))
+    };
+  }
+});
+
+// Verify all components of the delivery system
+export const verifyDeliverySystem = query({
+  handler: async (ctx) => {
+    // Check schema extensions
+    const sampleMessage = await ctx.db
+      .query("userSelectedMessages")
+      .first();
+    
+    // Check if new fields exist by looking at a message with delivery status
+    const processedMessage = await ctx.db
+      .query("userSelectedMessages")
+      .filter(q => q.neq(q.field("deliveryStatus"), undefined))
+      .first();
+    
+    return {
+      schemaVerified: {
+        hasDeliveryStatus: !!processedMessage?.deliveryStatus,
+        hasDeliveryAttempts: processedMessage?.deliveryAttempts !== undefined,
+        hasLastDeliveryAttempt: processedMessage?.lastDeliveryAttempt !== undefined,
+        hasDeliveryError: processedMessage?.deliveryError !== undefined,
+        hasActualDeliveryTime: processedMessage?.actualDeliveryTime !== undefined
+      },
+      systemStatus: {
+        totalMessages: await ctx.db.query("userSelectedMessages").collect().then(msgs => msgs.length),
+        scheduledMessages: await ctx.db.query("userSelectedMessages")
+          .filter(q => q.eq(q.field("isScheduled"), true))
+          .collect().then(msgs => msgs.length),
+        processedMessages: await ctx.db.query("userSelectedMessages")
+          .filter(q => q.neq(q.field("deliveryStatus"), undefined))
+          .collect().then(msgs => msgs.length),
+        usersWithPhones: await ctx.db.query("users")
+          .filter(q => q.neq(q.field("phone"), undefined))
+          .collect().then(users => users.length)
+      }
+    };
+  }
+});
