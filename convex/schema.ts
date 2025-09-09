@@ -157,6 +157,18 @@ const applicationTables = {
     .index("by_user_lesson", ["userId", "lessonId"]) 
     .index("by_user", ["userId"]) 
     .index("by_group", ["groupId"]),
+
+  // Per-user study book -> default group mapping
+  studyGroupPreferences: defineTable({
+    userId: v.id("users"),
+    studyBookId: v.id("studyBooks"),
+    groupId: v.id("groups"),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_study", ["userId", "studyBookId"]) 
+    .index("by_user", ["userId"]) 
+    .index("by_group", ["groupId"]),
 };
 
 // Extended users table to add isAdmin field (overrides authTables.users)

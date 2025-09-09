@@ -4,14 +4,12 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { StudyBookBrowser } from "./StudyBookBrowser";
 import { MessageSelector } from "./MessageSelector";
-import { UserProgressDashboard } from "./UserProgressDashboard";
-import { DeliveryHistoryView } from "./DeliveryHistoryView";
 import { KanbanBoard } from "./KanbanBoard";
 
 export function StudyMessagesTab() {
   const [selectedStudyBook, setSelectedStudyBook] = useState<Id<"studyBooks"> | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Id<"lessons"> | null>(null);
-  const [activeView, setActiveView] = useState<"books" | "lessons" | "messages" | "progress" | "delivery">("books");
+  const [activeView, setActiveView] = useState<"books" | "lessons" | "messages">("books");
 
   const studyBooks = useQuery(api.studyBooks.list) || [];
   const lessons = useQuery(
@@ -20,6 +18,8 @@ export function StudyMessagesTab() {
   ) || [];
   const selectedStudyBookData = studyBooks.find(book => book._id === selectedStudyBook);
   const selectedLessonData = lessons.find(lesson => lesson._id === selectedLesson);
+  const groups = useQuery(api.groups.list) || [];
+  const studyGroupPref = selectedStudyBook ? useQuery(api.studyGroupPrefs.getForStudy, { studyBookId: selectedStudyBook }) : null;
 
   const handleStudyBookSelect = (bookId: Id<"studyBooks">) => {
     setSelectedStudyBook(bookId);
@@ -37,6 +37,8 @@ export function StudyMessagesTab() {
     setSelectedLesson(null);
     setActiveView("books");
   };
+
+  const setStudyGroup = useMutation(api.studyGroupPrefs.setForStudy);
 
   const handleBackToLessons = () => {
     setSelectedLesson(null);
@@ -80,28 +82,7 @@ export function StudyMessagesTab() {
             )}
           </nav>
         </div>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setActiveView("progress")}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              activeView === "progress" 
-                ? "bg-blue-600 text-white" 
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            📊 My Progress
-          </button>
-          <button
-            onClick={() => setActiveView("delivery")}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              activeView === "delivery" 
-                ? "bg-green-600 text-white" 
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            📨 Delivery History
-          </button>
-        </div>
+        <div className="flex space-x-2"></div>
       </div>
 
       {/* Content based on active view */}
@@ -115,11 +96,33 @@ export function StudyMessagesTab() {
       {activeView === "lessons" && selectedStudyBook && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="space-y-1">
               <h3 className="text-xl font-semibold text-gray-900">
                 {selectedStudyBookData?.title} - Lessons
               </h3>
               <p className="text-gray-600 text-sm">{selectedStudyBookData?.description}</p>
+              {/* Study-level group selection */}
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-gray-600">Send to group:</span>
+                <select
+                  value={(studyGroupPref as any)?.groupId || ""}
+                  onChange={async (e) => {
+                    const gid = e.target.value as any;
+                    if (!gid) return;
+                    try {
+                      await setStudyGroup({ studyBookId: selectedStudyBook as any, groupId: gid });
+                    } catch (err) {
+                      console.error(err);
+                    }
+                  }}
+                  className="border border-gray-300 rounded-md px-2 py-1 bg-white"
+                >
+                  <option value="">Select a group…</option>
+                  {groups.map((g: any) => (
+                    <option key={g._id} value={g._id}>{g.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -158,17 +161,6 @@ export function StudyMessagesTab() {
         />
       )}
 
-      {activeView === "progress" && (
-        <UserProgressDashboard 
-          onBack={() => setActiveView("books")}
-        />
-      )}
-
-      {activeView === "delivery" && (
-        <DeliveryHistoryView 
-          onBack={() => setActiveView("books")}
-        />
-      )}
     </div>
   );
 }
