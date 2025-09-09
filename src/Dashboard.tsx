@@ -98,7 +98,7 @@ export function Dashboard() {
             </select>
           </div>
         </div>
-        <div className="overflow-x-auto">
+        <div className="hidden sm:block overflow-x-auto">
           <nav className="flex gap-2" role="tablist" aria-label="Primary">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id
