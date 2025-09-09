@@ -262,11 +262,17 @@ export function ContactsTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="space-y-2">
         <h2 className="text-2xl font-bold text-gray-900">Contacts</h2>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={() => setShowBulk(true)}>Add Contacts In Bulk</Button>
-          <Button onClick={() => setShowForm(true)}>Add Contact</Button>
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+          <Button
+            variant="secondary"
+            onClick={() => setShowBulk(true)}
+            className="w-full sm:w-auto"
+          >
+            Bulk Upload
+          </Button>
+          <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto">Add Contact</Button>
         </div>
       </div>
 
