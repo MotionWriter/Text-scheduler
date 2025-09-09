@@ -156,7 +156,7 @@ export function TemplatesTab() {
                   </div>
                 </div>
               {template.category && (
-                <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mb-3">
+                <span className="inline-block badge-neutral mb-3">
                   {template.category}
                 </span>
               )}
