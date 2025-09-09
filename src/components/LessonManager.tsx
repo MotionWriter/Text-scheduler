@@ -71,13 +71,13 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
       <div className="flex justify-between items-center">
         <button
           onClick={onBack}
-          className="text-blue-600 hover:text-blue-900"
+          className="text-primary hover:opacity-90"
         >
           ← Back to Study Books
         </button>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:opacity-90 transition-colors"
         >
           Add Lesson
         </button>
@@ -92,7 +92,7 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+<label className="block text-sm font-medium text-foreground mb-1">
                   Lesson Number *
                 </label>
                 <input
@@ -101,12 +101,12 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
                   min="1"
                   value={formData.lessonNumber}
                   onChange={(e) => setFormData({ ...formData, lessonNumber: parseInt(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   disabled={!!editingLesson} // Can't change lesson number when editing
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   Title *
                 </label>
                 <input
@@ -114,44 +114,44 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="e.g., The Heart of a Man"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 Description
               </label>
               <textarea
                 rows={3}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="Brief description of the lesson..."
               />
             </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-foreground mb-1">
                         Active Week Start (optional)
                       </label>
                       <input
                         type="date"
                         value={formData.activeWeekStart}
                         onChange={(e) => setFormData({ ...formData, activeWeekStart: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       />
-                      <p className="text-xs text-gray-500 mt-1">Pick the Monday (or desired start) of the active week.</p>
+                      <p className="text-xs text-muted-foreground mt-1">Pick the Monday (or desired start) of the active week.</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-foreground mb-1">
                         Default Send Time (optional)
                       </label>
                       <select
                         value={formData.defaultSendTime}
                         onChange={(e) => setFormData({ ...formData, defaultSendTime: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       >
                         {Array.from({ length: 96 }).map((_, idx) => {
                           const h = String(Math.floor(idx / 4)).padStart(2, '0')
@@ -160,21 +160,21 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
                           return <option key={val} value={val}>{val}</option>
                         })}
                       </select>
-                      <p className="text-xs text-gray-500 mt-1">Used as the default time when users schedule messages.</p>
+                      <p className="text-xs text-muted-foreground mt-1">Used as the default time when users schedule messages.</p>
                     </div>
                   </div>
 
                   <div className="flex gap-2">
                   <button
                     type="submit"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                    className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:opacity-90 transition-colors"
                   >
                     {editingLesson ? "Update" : "Create"}
                   </button>
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
+                    className="bg-muted text-foreground px-4 py-2 rounded-md hover:opacity-90 transition-colors"
                   >
                     Cancel
                   </button>
@@ -192,19 +192,19 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                    <span className="bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] text-xs px-2 py-1 rounded-full">
                       Lesson {lesson.lessonNumber}
                     </span>
-                    <h3 className="text-lg font-semibold text-gray-900">{lesson.title}</h3>
+                    <h3 className="text-lg font-semibold text-foreground">{lesson.title}</h3>
                   </div>
                   {lesson.description && (
-                    <p className="text-gray-600 text-sm">{lesson.description}</p>
+                    <p className="text-muted-foreground text-sm">{lesson.description}</p>
                   )}
                 </div>
                 <div className="flex gap-2 ml-4">
                   <button
                     onClick={() => onSelectLesson(lesson._id)}
-                    className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors"
+className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm hover:opacity-90 transition-colors"
                   >
                     Manage Messages
                   </button>
@@ -220,7 +220,7 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
                       });
                       setShowForm(true);
                     }}
-                    className="text-blue-600 hover:text-blue-900 text-sm"
+className="text-primary hover:opacity-90 text-sm"
                   >
                     Edit
                   </button>
@@ -235,7 +235,7 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
                         }
                       }
                     }}
-                    className="text-red-600 hover:text-red-900 text-sm"
+className="text-[hsl(var(--destructive))] hover:opacity-90 text-sm"
                   >
                     Delete
                   </button>
@@ -245,7 +245,7 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
           ))}
         
         {lessons.length === 0 && (
-          <div className="bg-white p-8 rounded-lg border shadow-sm text-center text-gray-500">
+          <div className="bg-white p-8 rounded-lg border shadow-sm text-center text-muted-foreground">
             No lessons yet. Add your first lesson to get started.
           </div>
         )}
