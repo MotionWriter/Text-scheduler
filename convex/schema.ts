@@ -140,11 +140,23 @@ const applicationTables = {
     deliveryError: v.optional(v.string()),
     actualDeliveryTime: v.optional(v.number()),
   })
-    .index("by_user_lesson", ["userId", "lessonId"])
-    .index("by_user_scheduled", ["userId", "isScheduled"])
-    .index("by_lesson", ["lessonId"])
-    .index("by_scheduled_time", ["scheduledAt"])
+    .index("by_user_lesson", ["userId", "lessonId"]) 
+    .index("by_user_scheduled", ["userId", "isScheduled"]) 
+    .index("by_lesson", ["lessonId"]) 
+    .index("by_scheduled_time", ["scheduledAt"]) 
     .index("by_delivery_status", ["deliveryStatus"]),
+
+  // Per-user lesson -> group mapping
+  lessonGroupPreferences: defineTable({
+    userId: v.id("users"),
+    lessonId: v.id("lessons"),
+    groupId: v.id("groups"),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_lesson", ["userId", "lessonId"]) 
+    .index("by_user", ["userId"]) 
+    .index("by_group", ["groupId"]),
 };
 
 // Extended users table to add isAdmin field (overrides authTables.users)

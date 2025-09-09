@@ -198,43 +198,64 @@ export const updateScheduling = mutation({
     // Verify ownership
     const selection = await ctx.db.get(args.id);
     if (!selection || selection.userId !== user._id) {
-      throw new Error("Message selection not found or access denied");
+      throw new Error("Selection not found or access denied");
     }
-    
-    return await ctx.db.patch(args.id, {
+
+    // Update schedule on the selection
+    await ctx.db.patch(args.id, {
       scheduledAt: args.scheduledAt,
       isScheduled: args.isScheduled,
+      // Reset delivery state when rescheduling
+      deliveryStatus: undefined,
+      deliveryAttempts: 0,
+      lastDeliveryAttempt: undefined,
+      deliveryError: undefined,
     });
-  },
-});
 
-// Remove message selection
-export const remove = mutation({
-  args: { id: v.id("userSelectedMessages") },
-  handler: async (ctx, args) => {
-    const user = await requireUser(ctx);
-    
-    // Verify ownership
-    const selection = await ctx.db.get(args.id);
-    if (!selection || selection.userId !== user._id) {
-      throw new Error("Message selection not found or access denied");
-    }
+    // If scheduling is set and a lesson->group mapping exists, fan out to group members
+    if (args.isScheduled && args.scheduledAt) {
+      const pref = await ctx.db
+        .query("lessonGroupPreferences")
+        .withIndex("by_user_lesson", q => q.eq("userId", user._id).eq("lessonId", selection.lessonId))
+        .first();
 
-    // If this selection refers to a custom message, also delete the underlying
-    // custom message so the user's quota is updated accordingly.
-    // Note: current system prevents duplicate selections of the same custom message,
-    // so there should be at most one selection referencing a given custom message.
-    if (selection.customMessageId) {
-      const custom = await ctx.db.get(selection.customMessageId);
-      if (custom && custom.userId === user._id) {
-        // Delete the selection first, then remove the custom message record.
-        await ctx.db.delete(args.id);
-        await ctx.db.delete(selection.customMessageId);
-        return;
+      if (pref) {
+        // Determine message content
+        let content = "";
+        if (selection.predefinedMessageId) {
+          const pm = await ctx.db.get(selection.predefinedMessageId);
+          content = (pm as any)?.content || "";
+        } else if (selection.customMessageId) {
+          const cm = await ctx.db.get(selection.customMessageId);
+          content = (cm as any)?.content || "";
+        }
+
+        // Get group members
+        const memberships = await ctx.db
+          .query("groupMemberships")
+          .withIndex("by_group", q => q.eq("groupId", pref.groupId))
+          .collect();
+
+        for (const m of memberships) {
+          await ctx.db.insert("scheduledMessages", {
+            userId: user._id,
+            contactId: m.contactId,
+            groupId: pref.groupId,
+            templateId: undefined,
+            message: content,
+            scheduledFor: args.scheduledAt,
+            status: "pending",
+            notes: undefined,
+            category: "study",
+          });
+        }
+
+        // Prevent duplicate send via userSelectedMessages cron path
+        await ctx.db.patch(args.id, {
+          deliveryStatus: "cancelled",
+          deliveryError: undefined,
+        });
       }
     }
-    
-    // Default behavior: just delete the selection
-    await ctx.db.delete(args.id);
   },
 });

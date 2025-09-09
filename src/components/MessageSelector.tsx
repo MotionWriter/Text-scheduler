@@ -23,6 +23,8 @@ export function MessageSelector({ lessonId, lessonTitle, onBack }: MessageSelect
   const customMessageCountData = useQuery(api.userCustomMessages.getCountForLesson, { lessonId }) || { count: 0, remaining: 2, canCreate: true };
   const selectedMessages = useQuery(api.userSelectedMessages.getForLesson, { lessonId }) || [];
   const lesson = useQuery(api.lessons.get, { id: lessonId });
+  const groups = useQuery(api.groups.list) || [];
+  const groupPref = useQuery(api.lessonGroupPrefs.getForLesson, { lessonId });
 
   // Mutations
   const createCustomMessage = useMutation(api.userCustomMessages.create);
@@ -32,6 +34,7 @@ export function MessageSelector({ lessonId, lessonTitle, onBack }: MessageSelect
   const selectCustomMessage = useMutation(api.userSelectedMessages.selectCustom);
   const removeSelectedMessage = useMutation(api.userSelectedMessages.remove);
   const updateScheduling = useMutation(api.userSelectedMessages.updateScheduling);
+  const setLessonGroup = useMutation(api.lessonGroupPrefs.setForLesson);
 
   const canCreateCustomMessage = customMessageCountData.canCreate;
   const characterCount = customMessageContent.length;
@@ -198,9 +201,33 @@ export function MessageSelector({ lessonId, lessonTitle, onBack }: MessageSelect
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="space-y-1">
           <h3 className="text-xl font-semibold text-gray-900">{lessonTitle} - Messages</h3>
           <p className="text-gray-600 text-sm">Select predefined messages or create your own</p>
+          {/* Group association for this lesson */}
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-600">Send to group:</span>
+            <select
+              value={groupPref?._id ? (groupPref as any).groupId : ""}
+              onChange={async (e) => {
+                const gid = e.target.value as any;
+                if (gid) {
+                  try {
+                    await setLessonGroup({ lessonId, groupId: gid });
+                    toast.success("Group linked to lesson");
+                  } catch (err) {
+                    toast.error("Failed to set group for lesson");
+                  }
+                }
+              }}
+              className="border border-gray-300 rounded-md px-2 py-1 bg-white"
+            >
+              <option value="">Select a group…</option>
+              {groups.map((g: any) => (
+                <option key={g._id} value={g._id}>{g.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
         <button
           onClick={onBack}
