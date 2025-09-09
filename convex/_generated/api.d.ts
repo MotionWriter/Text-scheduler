@@ -17,6 +17,8 @@ import type * as _lib_adminAuth from "../_lib/adminAuth.js";
 import type * as _lib_messageTypes from "../_lib/messageTypes.js";
 import type * as _lib_userAuth from "../_lib/userAuth.js";
 import type * as adminTest from "../adminTest.js";
+import type * as allMessagesForStudyBook from "../allMessagesForStudyBook.js";
+import type * as allScheduledMessages from "../allScheduledMessages.js";
 import type * as api_ from "../api.js";
 import type * as apiAuth from "../apiAuth.js";
 import type * as apiKeys from "../apiKeys.js";
@@ -31,6 +33,7 @@ import type * as messageTemplates from "../messageTemplates.js";
 import type * as predefinedMessages from "../predefinedMessages.js";
 import type * as router from "../router.js";
 import type * as scheduledMessages from "../scheduledMessages.js";
+import type * as setupAdmin from "../setupAdmin.js";
 import type * as smsDelivery from "../smsDelivery.js";
 import type * as studyBooks from "../studyBooks.js";
 import type * as testAdminWorkflow from "../testAdminWorkflow.js";
@@ -39,6 +42,7 @@ import type * as testUserWorkflow from "../testUserWorkflow.js";
 import type * as userCustomMessages from "../userCustomMessages.js";
 import type * as userDashboard from "../userDashboard.js";
 import type * as userSelectedMessages from "../userSelectedMessages.js";
+import type * as userVerification from "../userVerification.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -53,6 +57,8 @@ declare const fullApi: ApiFromModules<{
   "_lib/messageTypes": typeof _lib_messageTypes;
   "_lib/userAuth": typeof _lib_userAuth;
   adminTest: typeof adminTest;
+  allMessagesForStudyBook: typeof allMessagesForStudyBook;
+  allScheduledMessages: typeof allScheduledMessages;
   api: typeof api_;
   apiAuth: typeof apiAuth;
   apiKeys: typeof apiKeys;
@@ -67,6 +73,7 @@ declare const fullApi: ApiFromModules<{
   predefinedMessages: typeof predefinedMessages;
   router: typeof router;
   scheduledMessages: typeof scheduledMessages;
+  setupAdmin: typeof setupAdmin;
   smsDelivery: typeof smsDelivery;
   studyBooks: typeof studyBooks;
   testAdminWorkflow: typeof testAdminWorkflow;
@@ -75,6 +82,7 @@ declare const fullApi: ApiFromModules<{
   userCustomMessages: typeof userCustomMessages;
   userDashboard: typeof userDashboard;
   userSelectedMessages: typeof userSelectedMessages;
+  userVerification: typeof userVerification;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

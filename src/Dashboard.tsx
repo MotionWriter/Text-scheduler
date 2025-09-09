@@ -10,26 +10,36 @@ import { DeliveryManagementTab } from "./components/DeliveryManagementTab";
 import { DeliveryNotifications } from "./components/DeliveryNotifications";
 import { MessagesTab } from "./components/MessagesTab";
 import { ApiKeysTab } from "./components/ApiKeysTab";
+import { SetupTab } from "./components/SetupTab";
 
 type Tab = "messages" | "contacts" | "groups" | "templates" | "study-messages" | "lessons" | "delivery" | "api-keys";
 
 export function Dashboard() {
   const [activeTab, setActiveTab] = useState<Tab>("messages");
+  const [testMode, setTestMode] = useState(false);
   const user = useQuery(api.auth.loggedInUser);
+  const verificationStatus = useQuery(api.userVerification.checkVerificationStatus);
   const isAdmin = user?.isAdmin || false;
+  const isVerified = verificationStatus?.isVerified || false;
 
   const tabs = [
     { id: "messages" as const, label: "Scheduled Messages", icon: "📅" },
     { id: "contacts" as const, label: "Contacts", icon: "👥" },
     { id: "groups" as const, label: "Groups", icon: "👨‍👩‍👧‍👦" },
-    ...(isAdmin ? [
+    ...(isAdmin && !testMode ? [
       { id: "lessons" as const, label: "Lesson Content", icon: "📚" },
       { id: "delivery" as const, label: "Message Delivery", icon: "📨" },
-    ] : [
+    ] : []),
+    ...((!isAdmin || testMode) ? [
       { id: "study-messages" as const, label: "Study Messages", icon: "📖" },
-    ]),
-    { id: "api-keys" as const, label: "API Keys", icon: "🔑" },
+    ] : []),
+    ...(isAdmin ? [{ id: "api-keys" as const, label: "API Keys", icon: "🔑" }] : []),
   ];
+
+  // Show setup flow for unverified non-admin users
+  if (!isVerified && !isAdmin) {
+    return <SetupTab />;
+  }
 
   return (
     <div className="space-y-6">
@@ -41,6 +51,31 @@ export function Dashboard() {
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600">Welcome back, {user?.email}</p>
         </div>
+        {isAdmin && (
+          <div className="flex items-center space-x-3">
+            <span className="text-sm text-gray-600">Admin Mode</span>
+            <button
+              onClick={() => {
+                setTestMode(!testMode);
+                if (!testMode) {
+                  setActiveTab("study-messages");
+                } else {
+                  setActiveTab("lessons");
+                }
+              }}
+              className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                testMode ? "bg-blue-600" : "bg-gray-200"
+              }`}
+            >
+              <span
+                className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${
+                  testMode ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+            <span className="text-sm text-gray-600">Test Mode</span>
+          </div>
+        )}
       </div>
 
       <div className="border-b border-gray-200">
@@ -67,10 +102,10 @@ export function Dashboard() {
         {activeTab === "contacts" && <ContactsTab />}
         {activeTab === "groups" && <GroupsTab />}
         {activeTab === "templates" && !isAdmin && <TemplatesTab />}
-        {activeTab === "study-messages" && !isAdmin && <StudyMessagesTab />}
-        {activeTab === "lessons" && isAdmin && <LessonContentTab />}
-        {activeTab === "delivery" && isAdmin && <DeliveryManagementTab />}
-        {activeTab === "api-keys" && <ApiKeysTab />}
+        {activeTab === "study-messages" && (!isAdmin || testMode) && <StudyMessagesTab />}
+        {activeTab === "lessons" && isAdmin && !testMode && <LessonContentTab />}
+        {activeTab === "delivery" && isAdmin && !testMode && <DeliveryManagementTab />}
+        {activeTab === "api-keys" && isAdmin && <ApiKeysTab />}
       </div>
     </div>
   );

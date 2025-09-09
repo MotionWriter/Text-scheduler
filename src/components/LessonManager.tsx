@@ -22,6 +22,8 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
     lessonNumber: lessons.length + 1,
     title: "",
     description: "",
+    activeWeekStart: "",
+    defaultSendTime: "09:00",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,6 +34,8 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
           id: editingLesson,
           title: formData.title,
           description: formData.description,
+          activeWeekStart: formData.activeWeekStart ? new Date(formData.activeWeekStart).getTime() : undefined,
+          defaultSendTime: formData.defaultSendTime || undefined,
         });
         toast.success("Lesson updated successfully");
       } else {
@@ -54,6 +58,8 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
       lessonNumber: lessons.length + 1,
       title: "",
       description: "",
+      activeWeekStart: "",
+      defaultSendTime: "09:00",
     });
     setEditingLesson(null);
     setShowForm(false);
@@ -125,21 +131,54 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
                 placeholder="Brief description of the lesson..."
               />
             </div>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                {editingLesson ? "Update" : "Create"}
-              </button>
-              <button
-                type="button"
-                onClick={resetForm}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Active Week Start (optional)
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.activeWeekStart}
+                        onChange={(e) => setFormData({ ...formData, activeWeekStart: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Pick the Monday (or desired start) of the active week.</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Default Send Time (optional)
+                      </label>
+                      <select
+                        value={formData.defaultSendTime}
+                        onChange={(e) => setFormData({ ...formData, defaultSendTime: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        {Array.from({ length: 96 }).map((_, idx) => {
+                          const h = String(Math.floor(idx / 4)).padStart(2, '0')
+                          const m = String((idx % 4) * 15).padStart(2, '0')
+                          const val = `${h}:${m}`
+                          return <option key={val} value={val}>{val}</option>
+                        })}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">Used as the default time when users schedule messages.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    {editingLesson ? "Update" : "Create"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
           </form>
         </div>
       )}
@@ -176,6 +215,8 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
                         lessonNumber: lesson.lessonNumber,
                         title: lesson.title,
                         description: lesson.description || "",
+                        activeWeekStart: lesson.activeWeekStart ? new Date(lesson.activeWeekStart - new Date(lesson.activeWeekStart).getTimezoneOffset()*60000).toISOString().slice(0,10) : "",
+                        defaultSendTime: lesson.defaultSendTime || "09:00",
                       });
                       setShowForm(true);
                     }}

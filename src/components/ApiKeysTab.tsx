@@ -9,10 +9,12 @@ export function ApiKeysTab() {
   const createApiKey = useMutation(api.apiKeys.create);
   const toggleApiKey = useMutation(api.apiKeys.toggle);
   const removeApiKey = useMutation(api.apiKeys.remove);
+  const rotateKey = useMutation(api.apiKeys.rotate);
 
   const [showForm, setShowForm] = useState(false);
   const [keyName, setKeyName] = useState("");
   const [newApiKey, setNewApiKey] = useState<string | null>(null);
+  const [rotatedFrom, setRotatedFrom] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +35,17 @@ export function ApiKeysTab() {
       toast.success(`API key ${!isActive ? "activated" : "deactivated"}`);
     } catch (error) {
       toast.error("Failed to update API key");
+    }
+  };
+
+  const handleRotate = async (id: Id<"apiKeys">, name: string) => {
+    try {
+      const res = await rotateKey({ fromKeyId: id, name: `Rotated from ${name}` });
+      setNewApiKey(res.apiKey);
+      setRotatedFrom(name);
+      toast.success("New API key created. Update your Shortcut, then the old key will deactivate on first use of the new key or after 24h.");
+    } catch (error) {
+      toast.error("Failed to rotate API key");
     }
   };
 
@@ -77,6 +90,13 @@ export function ApiKeysTab() {
           <p className="text-green-700 mb-3">
             Please copy this API key now. You won't be able to see it again.
           </p>
+          {rotatedFrom && (
+            <div className="text-sm text-green-800 mb-3">
+              This key replaces: <strong>{rotatedFrom}</strong>.
+              The old key will be automatically deactivated after your Shortcut successfully calls
+              GET /api/messages/pending with this new key, or after 24 hours—whichever comes first.
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <code className="bg-white px-3 py-2 rounded border flex-1 font-mono text-sm">
               {newApiKey}
@@ -222,6 +242,12 @@ export function ApiKeysTab() {
                       {new Date(key._creationTime).toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => handleRotate(key._id, key.name)}
+                        className="mr-3 text-blue-600 hover:text-blue-900"
+                      >
+                        Rotate
+                      </button>
                       <button
                         onClick={() => handleToggle(key._id, key.isActive)}
                         className={`mr-3 ${

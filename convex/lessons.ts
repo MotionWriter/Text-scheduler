@@ -70,6 +70,8 @@ export const update = mutation({
     title: v.optional(v.string()),
     description: v.optional(v.string()),
     isActive: v.optional(v.boolean()),
+    activeWeekStart: v.optional(v.number()),
+    defaultSendTime: v.optional(v.string()), // HH:mm
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
@@ -80,6 +82,8 @@ export const update = mutation({
     if (updates.title !== undefined) updateData.title = updates.title;
     if (updates.description !== undefined) updateData.description = updates.description;
     if (updates.isActive !== undefined) updateData.isActive = updates.isActive;
+    if (updates.activeWeekStart !== undefined) updateData.activeWeekStart = updates.activeWeekStart;
+    if (updates.defaultSendTime !== undefined) updateData.defaultSendTime = updates.defaultSendTime;
     
     return await ctx.db.patch(id, updateData);
   },

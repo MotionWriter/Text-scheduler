@@ -1,4 +1,4 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
@@ -6,9 +6,7 @@ export const list = query({
   args: {},
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    if (!userId) throw new Error("Not authenticated");
 
     const keys = await ctx.db
       .query("apiKeys")
@@ -26,9 +24,7 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    if (!userId) throw new Error("Not authenticated");
 
     // Generate a random API key
     const apiKey = generateApiKey();
@@ -46,6 +42,41 @@ export const create = mutation({
   },
 });
 
+// Rotate: create a new key that will replace an existing one after grace period
+export const rotate = mutation({
+  args: {
+    fromKeyId: v.id("apiKeys"),
+    name: v.optional(v.string()),
+    gracePeriodMs: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const fromKey = await ctx.db.get(args.fromKeyId);
+    if (!fromKey || fromKey.userId !== userId) {
+      throw new Error("API key not found or access denied");
+    }
+
+    const apiKey = generateApiKey();
+    const keyHash = await hashApiKey(apiKey);
+    const graceMs = args.gracePeriodMs ?? 24 * 60 * 60 * 1000; // default 24h
+    const now = Date.now();
+
+    const newKeyId = await ctx.db.insert("apiKeys", {
+      userId,
+      keyHash,
+      name: args.name ?? `Rotated ${new Date(now).toLocaleString()}`,
+      isActive: true,
+      lastUsed: undefined,
+      replacesKeyId: args.fromKeyId,
+      graceUntil: now + graceMs,
+    } as any);
+
+    return { newKeyId, apiKey };
+  },
+});
+
 export const toggle = mutation({
   args: {
     id: v.id("apiKeys"),
@@ -53,9 +84,7 @@ export const toggle = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    if (!userId) throw new Error("Not authenticated");
 
     const apiKey = await ctx.db.get(args.id);
     if (!apiKey || apiKey.userId !== userId) {
@@ -72,9 +101,7 @@ export const remove = mutation({
   args: { id: v.id("apiKeys") },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    if (!userId) throw new Error("Not authenticated");
 
     const apiKey = await ctx.db.get(args.id);
     if (!apiKey || apiKey.userId !== userId) {
@@ -82,6 +109,63 @@ export const remove = mutation({
     }
 
     await ctx.db.delete(args.id);
+  },
+});
+
+// Internal: touch usage by API key and report if this was the first use
+export const touchUsageByApiKey = internalMutation({
+  args: { apiKey: v.string() },
+  handler: async (ctx, args) => {
+    const keyHash = await hashApiKey(args.apiKey);
+    const record = await ctx.db
+      .query("apiKeys")
+      .withIndex("by_key_hash", (q) => q.eq("keyHash", keyHash))
+      .first();
+
+    if (!record || !record.isActive) {
+      return null;
+    }
+
+    const now = Date.now();
+    const isFirstUse = !record.lastUsed;
+
+    await ctx.db.patch(record._id, {
+      lastUsed: now,
+    });
+
+    let deactivatedOnGrace = false;
+
+    // If this is an old key and a replacement exists whose grace has expired, deactivate this key now
+    if (!record.replacesKeyId) {
+      const replacement = await ctx.db
+        .query("apiKeys")
+        .withIndex("by_replaces", (q) => q.eq("replacesKeyId", record._id))
+        .first();
+      if (replacement && replacement.graceUntil && now > replacement.graceUntil && record.isActive) {
+        await ctx.db.patch(record._id, { isActive: false });
+        deactivatedOnGrace = true;
+      }
+    }
+
+    return { 
+      userId: record.userId, 
+      isFirstUse,
+      keyId: record._id,
+      replacesKeyId: record.replacesKeyId,
+      graceUntil: record.graceUntil,
+      deactivatedOnGrace,
+    };
+  },
+});
+
+// Internal: deactivate a key by id
+export const deactivate = internalMutation({
+  args: { keyId: v.id("apiKeys") },
+  handler: async (ctx, args) => {
+    const rec = await ctx.db.get(args.keyId);
+    if (rec && rec.isActive) {
+      await ctx.db.patch(args.keyId, { isActive: false });
+    }
   },
 });
 

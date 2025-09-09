@@ -6,14 +6,17 @@ import {
   ColumnFiltersState,
   SortingState,
   VisibilityState,
+  GroupingState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  getGroupedRowModel,
+  getExpandedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ChevronDown, Plus, Search } from "lucide-react"
+import { ChevronDown, Plus, Search, ChevronRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -59,18 +62,22 @@ export function MessagesDataTable<TData, TValue>({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+  const [grouping, setGrouping] = React.useState<GroupingState>([])
   const [statusFilter, setStatusFilter] = React.useState<string>("all")
-  const [categoryFilter, setCategoryFilter] = React.useState<string>("all")
+  const [groupByFilter, setGroupByFilter] = React.useState<string>("none")
 
   const table = useReactTable({
     data,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onGroupingChange: setGrouping,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getGroupedRowModel: getGroupedRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     state: {
@@ -78,6 +85,7 @@ export function MessagesDataTable<TData, TValue>({
       columnFilters,
       columnVisibility,
       rowSelection,
+      grouping,
     },
     initialState: {
       pagination: {
@@ -95,25 +103,18 @@ export function MessagesDataTable<TData, TValue>({
     }
   }, [statusFilter, table])
 
-  // Apply category filter
-  React.useEffect(() => {
-    if (categoryFilter === "all") {
-      table.getColumn("category")?.setFilterValue(undefined)
-    } else {
-      table.getColumn("category")?.setFilterValue(categoryFilter)
-    }
-  }, [categoryFilter, table])
 
-  // Get unique categories from data for filter
-  const categories = React.useMemo(() => {
-    const categorySet = new Set<string>()
-    data.forEach((item: any) => {
-      if (item.category) {
-        categorySet.add(item.category)
-      }
-    })
-    return Array.from(categorySet)
-  }, [data])
+  // Apply grouping filter
+  React.useEffect(() => {
+    switch (groupByFilter) {
+      case "groups":
+        setGrouping(["groupName"]) // group by new Group column
+        break
+      default:
+        setGrouping([])
+    }
+  }, [groupByFilter])
+
 
   const pendingCount = data.filter((item: any) => item.status === "pending").length
   const sentCount = data.filter((item: any) => item.status === "sent").length
@@ -171,21 +172,16 @@ export function MessagesDataTable<TData, TValue>({
           </SelectContent>
         </Select>
 
-        {categories.length > 0 && (
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+
+        <Select value={groupByFilter} onValueChange={setGroupByFilter}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Group by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">No Grouping</SelectItem>
+            <SelectItem value="groups">Groups</SelectItem>
+          </SelectContent>
+        </Select>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -244,21 +240,52 @@ export function MessagesDataTable<TData, TValue>({
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              table.getRowModel().rows.map((row) => {
+                if (row.getIsGrouped()) {
+                  // Group header row
+                  return (
+                    <TableRow key={row.id} className="bg-gradient-to-r from-slate-50 to-gray-50 border-y border-slate-200/60 font-medium shadow-sm">
+                      <TableCell colSpan={columns.length} className="py-3">
+                        <button
+                          onClick={() => row.getToggleExpandedHandler()()}
+                          className="flex items-center gap-3 text-left hover:text-blue-600 transition-colors group w-full"
+                        >
+                          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white border border-slate-200 group-hover:border-blue-300 group-hover:bg-blue-50 transition-all duration-150">
+                            <ChevronRight 
+                              className={`h-3.5 w-3.5 transition-transform duration-200 text-slate-600 group-hover:text-blue-600 ${
+                                row.getIsExpanded() ? 'rotate-90' : ''
+                              }`} 
+                            />
+                          </div>
+                          <span className="capitalize text-slate-700 font-semibold text-sm tracking-wide">
+                            {String(row.getGroupingValue(row.groupingColumnId!))} 
+                            <span className="ml-1.5 text-xs font-normal text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200">
+                              {row.subRows.length}
+                            </span>
+                          </span>
+                        </button>
+                      </TableCell>
+                    </TableRow>
+                  )
+                }
+                
+                // Regular data row
+                return (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                )
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">

@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -10,11 +11,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Edit, Trash2, Copy } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { MoreHorizontal, Edit, Trash2, Copy, Pencil, ChevronDown, ChevronUp } from "lucide-react"
 import { Id } from "../../convex/_generated/dataModel"
 
 export type ScheduledMessage = {
-  _id: Id<"scheduledMessages">
+  _id: string | Id<"scheduledMessages"> | Id<"userSelectedMessages">
   contact?: {
     name: string
     phoneNumber: string
@@ -27,48 +37,318 @@ export type ScheduledMessage = {
   message: string
   scheduledFor: number
   status: "pending" | "sent" | "failed"
-  category?: string
   notes?: string
   template?: {
     name: string
   }
   sentAt?: number
+  source: "manual" | "study"
+  messageSource?: string
+  lesson?: any
+  studyBook?: any
+  aggregated?: boolean
+  messageIds?: string[]
 }
 
 interface MessageColumnsProps {
   onEdit: (message: ScheduledMessage) => void
-  onDelete: (id: Id<"scheduledMessages">) => void
+  onDelete: (message: ScheduledMessage) => void
   onDuplicate?: (message: ScheduledMessage) => void
+  onUpdate: (row: ScheduledMessage, patch: Partial<Pick<ScheduledMessage, "message" | "scheduledFor" | "notes">>) => Promise<void>
 }
+
+
+function classNames(...args: (string | false | null | undefined)[]) {
+  return args.filter(Boolean).join(" ")
+}
+
+function formatLocalDateInput(ts: number) {
+  const d = new Date(ts)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+function formatLocalTimeInput(ts: number) {
+  const d = new Date(ts)
+  const hrs = String(d.getHours()).padStart(2, "0")
+  const mins = String(d.getMinutes()).padStart(2, "0")
+  return `${hrs}:${mins}`
+}
+
+function buildTimestampLocal(dateStr: string, timeStr: string) {
+  if (!dateStr || !timeStr) return null
+  // Construct as local time
+  const dt = new Date(`${dateStr}T${timeStr}`)
+  if (isNaN(dt.getTime())) return null
+  return dt.getTime()
+}
+
+const timeOptions: { value: string; label: string }[] = (() => {
+  const opts: { value: string; label: string }[] = []
+  for (let h = 0; h < 24; h++) {
+    for (let m = 0; m < 60; m += 15) {
+      const hh = String(h).padStart(2, "0")
+      const mm = String(m).padStart(2, "0")
+      const label = new Date(0, 0, 1, h, m).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      opts.push({ value: `${hh}:${mm}`, label })
+    }
+  }
+  return opts
+})()
+
+function ExpandableText({
+  text,
+  maxLength = 100,
+}: {
+  text: string
+  maxLength?: number
+}) {
+  const [isExpanded, setIsExpanded] = React.useState(false)
+  
+  if (text.length <= maxLength) {
+    return <div className="whitespace-pre-wrap break-words">{text}</div>
+  }
+  
+  return (
+    <div className="space-y-2">
+      <div className="whitespace-pre-wrap break-words">
+        {isExpanded ? text : `${text.substring(0, maxLength)}...`}
+      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation()
+          setIsExpanded(!isExpanded)
+        }}
+        className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+      >
+        {isExpanded ? (
+          <>
+            <ChevronUp className="h-3 w-3 mr-1" />
+            Show less
+          </>
+        ) : (
+          <>
+            <ChevronDown className="h-3 w-3 mr-1" />
+            Show more
+          </>
+        )}
+      </Button>
+    </div>
+  )
+}
+
+function EditableTextCell({
+  value,
+  onSave,
+  disabled,
+  multiline = false,
+  expandable = false,
+}: {
+  value: string
+  onSave: (next: string) => Promise<void>
+  disabled?: boolean
+  multiline?: boolean
+  expandable?: boolean
+}) {
+  const [editing, setEditing] = React.useState(false)
+  const [draft, setDraft] = React.useState(value)
+  React.useEffect(() => setDraft(value), [value])
+
+  const commit = async () => {
+    if (draft !== value) {
+      await onSave(draft)
+    }
+    setEditing(false)
+  }
+
+  if (!editing || disabled) {
+    return (
+      <div
+        className={classNames(
+          "group/textcell text-sm flex items-start gap-1",
+          !disabled && "cursor-text hover:bg-muted/40 rounded px-1 border-b border-dashed border-transparent hover:border-muted-foreground/40 transition-colors",
+          disabled && "opacity-60"
+        )}
+        onClick={() => { if (!disabled) setEditing(true) }}
+        role={disabled ? undefined : "button"}
+        tabIndex={disabled ? -1 : 0}
+        title={disabled ? undefined : "Click to edit • Shift+Enter to save • Esc to cancel"}
+      >
+        <div className="flex-1">
+          {expandable ? (
+            <ExpandableText text={value} />
+          ) : multiline ? (
+            <div className="whitespace-pre-wrap break-words max-w-xs">{value}</div>
+          ) : (
+            <div className="truncate max-w-xs">{value}</div>
+          )}
+        </div>
+        {!disabled && (
+          <Pencil className="h-3 w-3 opacity-60 text-muted-foreground mt-0.5" />
+        )}
+      </div>
+    )
+  }
+
+  const commonProps = {
+    autoFocus: true,
+    value: draft,
+    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setDraft(e.target.value),
+    onBlur: commit,
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (
+        e.key === 'Enter' && (
+          !multiline || (multiline && (e.metaKey || e.ctrlKey || e.shiftKey))
+        )
+      ) {
+        e.preventDefault()
+        void commit()
+      } else if (e.key === 'Escape') {
+        setDraft(value)
+        setEditing(false)
+      }
+    },
+    className: "w-full text-sm",
+  }
+
+  return multiline ? (
+    <Textarea rows={3} {...commonProps} />
+  ) : (
+    <Input {...commonProps} />
+  )
+}
+
+function EditableDateTimeCell({
+  ts,
+  onSave,
+  disabled,
+}: {
+  ts: number
+  onSave: (nextTs: number) => Promise<void>
+  disabled?: boolean
+}) {
+  const [editing, setEditing] = React.useState(false)
+  const [dateStr, setDateStr] = React.useState(formatLocalDateInput(ts))
+  const [timeStr, setTimeStr] = React.useState(formatLocalTimeInput(ts))
+
+  React.useEffect(() => {
+    setDateStr(formatLocalDateInput(ts))
+    setTimeStr(formatLocalTimeInput(ts))
+  }, [ts])
+
+  const commit = async () => {
+    const next = buildTimestampLocal(dateStr, timeStr)
+    if (next && next !== ts) {
+      await onSave(next)
+    }
+    setEditing(false)
+  }
+
+  if (!editing || disabled) {
+    const d = new Date(ts)
+    return (
+      <div
+        className={classNames(
+          "group/dt text-sm flex items-center gap-2",
+          !disabled && "hover:bg-muted/40 rounded px-1 border-b border-dashed border-transparent hover:border-muted-foreground/40 transition-colors",
+          disabled && "opacity-60"
+        )}
+        onClick={() => { if (!disabled) setEditing(true) }}
+        role={disabled ? undefined : "button"}
+        tabIndex={disabled ? -1 : 0}
+        title={disabled ? undefined : "Click to edit • Shift+Enter to save • Esc to cancel"}
+      >
+        <div>
+          <div>{d.toLocaleDateString()}</div>
+          <div className="text-muted-foreground">
+            {d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </div>
+        </div>
+        {!disabled && (
+          <Pencil className="h-3 w-3 opacity-0 group-hover/dt:opacity-60 text-muted-foreground transition-opacity" />
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Input
+        type="date"
+        value={dateStr}
+        onChange={(e) => setDateStr(e.target.value)}
+        onBlur={commit}
+        className="w-[9.5rem]"
+      />
+      <Select value={timeStr} onValueChange={(v) => { setTimeStr(v); }}>
+        <SelectTrigger className="w-[8rem]" onBlur={commit}>
+          <SelectValue placeholder="Time" />
+        </SelectTrigger>
+        <SelectContent className="max-h-72">
+          {timeOptions.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )
+}
+
 
 export const createMessageColumns = ({
   onEdit,
   onDelete,
   onDuplicate,
+  onUpdate,
 }: MessageColumnsProps): ColumnDef<ScheduledMessage>[] => [
   {
     accessorKey: "recipient",
     header: "Recipient",
+    accessorFn: (row) => {
+      if (row.group) {
+        return row.group.name
+      }
+      return row.contact?.name || "Unknown Contact"
+    },
     cell: ({ row }) => {
       const message = row.original
       return (
         <div className="space-y-1">
-          <div className="font-medium">
-            {message.contact?.name || "Unknown Contact"}
-          </div>
-          <div className="text-sm text-muted-foreground">
-            {message.contact?.phoneNumber}
-          </div>
-          {message.group && (
-            <div className="flex items-center gap-1">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: message.group.color || "#3B82F6" }}
-              />
-              <span className="text-xs text-blue-600">
-                {message.group.name}
-              </span>
-            </div>
+          {message.group ? (
+            <>
+              <div className="font-medium flex items-center gap-2">
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: message.group.color || "#3B82F6" }}
+                />
+                <span>{message.group.name}</span>
+                {message.aggregated && (
+                  <Badge variant="secondary" className="ml-1 text-[10px]">Group</Badge>
+                )}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {message.contact?.phoneNumber}
+              </div>
+            </>
+          ) : message.source === 'study' ? (
+            <>
+              <div className="font-medium">
+                {message.studyBook && message.lesson
+                  ? `${message.studyBook.title} - Lesson ${message.lesson.lessonNumber}`
+                  : 'Study Message'}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="font-medium">{message.contact?.name || 'Unknown Contact'}</div>
+              <div className="text-sm text-muted-foreground">{message.contact?.phoneNumber}</div>
+            </>
           )}
         </div>
       )
@@ -78,15 +358,21 @@ export const createMessageColumns = ({
     accessorKey: "message",
     header: "Message",
     cell: ({ row }) => {
-      const message = row.original
+      const m = row.original
+      // Disable editing if message is not pending OR if it's a predefined study message
+      const disabled = m.aggregated || m.status !== "pending" || (m.source === "study" && m.messageSource === "predefined")
       return (
-        <div className="space-y-1 max-w-xs">
-          <div className="truncate text-sm">
-            {message.message}
-          </div>
-          {message.template && (
+        <div className="space-y-1 max-w-sm">
+          <EditableTextCell
+            value={m.message}
+            multiline
+            expandable
+            disabled={disabled}
+            onSave={async (next) => onUpdate(m, { message: next })}
+          />
+          {m.template && (
             <div className="text-xs text-blue-600">
-              Template: {message.template.name}
+              Template: {m.template.name}
             </div>
           )}
         </div>
@@ -97,28 +383,37 @@ export const createMessageColumns = ({
     accessorKey: "scheduledFor",
     header: "Scheduled For",
     cell: ({ row }) => {
-      const scheduledFor = row.getValue("scheduledFor") as number
-      const date = new Date(scheduledFor)
+      const m = row.original
+      const disabled = m.aggregated || m.status !== "pending"
       return (
-        <div className="text-sm">
-          <div>{date.toLocaleDateString()}</div>
-          <div className="text-muted-foreground">
-            {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </div>
-        </div>
+        <EditableDateTimeCell
+          ts={m.scheduledFor}
+          disabled={disabled}
+          onSave={async (nextTs) => onUpdate(m, { scheduledFor: nextTs })}
+        />
       )
     },
   },
   {
-    accessorKey: "category",
-    header: "Category",
+    accessorKey: "groupName",
+    header: "Group",
+    accessorFn: (row) => row.group?.name || "—",
     cell: ({ row }) => {
-      const category = row.getValue("category") as string
-      if (!category) return null
+      const m = row.original
       return (
-        <Badge variant="secondary" className="text-xs">
-          {category}
-        </Badge>
+        <div className="flex items-center gap-2 text-sm">
+          {m.group ? (
+            <>
+              <div
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: m.group.color || "#3B82F6" }}
+              />
+              <span>{m.group.name}</span>
+            </>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )}
+        </div>
       )
     },
   },
@@ -171,20 +466,20 @@ export const createMessageColumns = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {message.status === "pending" && (
+            {message.status === "pending" && !message.aggregated && (
               <>
                 <DropdownMenuItem onClick={() => onEdit(message)}>
                   <Edit className="mr-2 h-4 w-4" />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(message._id)}>
+                <DropdownMenuItem onClick={() => onDelete(message)}>
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
               </>
             )}
-            {onDuplicate && (
+            {onDuplicate && !message.aggregated && (
               <DropdownMenuItem onClick={() => onDuplicate(message)}>
                 <Copy className="mr-2 h-4 w-4" />
                 Duplicate

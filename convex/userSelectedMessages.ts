@@ -57,6 +57,50 @@ export const getScheduled = query({
   },
 });
 
+// Get user's selected messages across all lessons in a study book
+export const getForStudyBook = query({
+  args: { studyBookId: v.id("studyBooks") },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+
+    // Get lesson ids for this study book
+    const lessons = await ctx.db
+      .query("lessons")
+      .withIndex("by_study_book", q => q.eq("studyBookId", args.studyBookId))
+      .collect();
+    const lessonIds = new Set(lessons.map(l => l._id));
+
+    // Get user's selections for the lessons in this study book
+    const results: any[] = []
+    for (const lesson of lessons) {
+      const sel = await ctx.db
+        .query("userSelectedMessages")
+        .withIndex("by_lesson", q => q.eq("lessonId", lesson._id))
+        .collect()
+      for (const s of sel) {
+        if (s.userId === user._id) {
+          results.push({ ...s, lesson })
+        }
+      }
+    }
+
+    // Enrich with message content for display
+    const enriched = await Promise.all(results.map(async (s) => {
+      let messageContent: string | null = null
+      if (s.predefinedMessageId) {
+        const pm = await ctx.db.get(s.predefinedMessageId)
+        if (pm) messageContent = (pm as any).content
+      } else if (s.customMessageId) {
+        const cm = await ctx.db.get(s.customMessageId)
+        if (cm) messageContent = (cm as any).content
+      }
+      return { ...s, messageContent }
+    }))
+
+    return enriched;
+  },
+});
+
 // Select a predefined message
 export const selectPredefined = mutation({
   args: {
@@ -175,7 +219,22 @@ export const remove = mutation({
     if (!selection || selection.userId !== user._id) {
       throw new Error("Message selection not found or access denied");
     }
+
+    // If this selection refers to a custom message, also delete the underlying
+    // custom message so the user's quota is updated accordingly.
+    // Note: current system prevents duplicate selections of the same custom message,
+    // so there should be at most one selection referencing a given custom message.
+    if (selection.customMessageId) {
+      const custom = await ctx.db.get(selection.customMessageId);
+      if (custom && custom.userId === user._id) {
+        // Delete the selection first, then remove the custom message record.
+        await ctx.db.delete(args.id);
+        await ctx.db.delete(selection.customMessageId);
+        return;
+      }
+    }
     
+    // Default behavior: just delete the selection
     await ctx.db.delete(args.id);
   },
 });

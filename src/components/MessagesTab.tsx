@@ -8,11 +8,13 @@ import { createMessageColumns, ScheduledMessage } from "./message-columns";
 import { MessageFormDialog, MessageFormData } from "./message-form-dialog";
 
 export function MessagesTab() {
-  const messages = useQuery(api.scheduledMessages.list) || [];
+  const messages = useQuery(api.allScheduledMessages.listAll) || [];
   const createMessage = useMutation(api.scheduledMessages.create);
   const updateMessage = useMutation(api.scheduledMessages.update);
   const createForGroup = useMutation(api.scheduledMessages.createForGroup);
   const removeMessage = useMutation(api.scheduledMessages.remove);
+  const removeUserSelected = useMutation(api.userSelectedMessages.remove);
+  const createCustomMessage = useMutation(api.userCustomMessages.create);
 
   const [showDialog, setShowDialog] = useState(false);
   const [editingMessage, setEditingMessage] = useState<ScheduledMessage | null>(null);
@@ -23,10 +25,15 @@ export function MessagesTab() {
     setShowDialog(true);
   };
 
-  const handleDelete = async (id: Id<"scheduledMessages">) => {
+  const handleDelete = async (message: ScheduledMessage) => {
     if (confirm("Are you sure you want to delete this scheduled message?")) {
       try {
-        await removeMessage({ id });
+        if (message.source === "manual") {
+          await removeMessage({ id: message._id as Id<"scheduledMessages"> });
+        } else if (message.source === "study") {
+          // For study messages, we use the userSelectedMessages remove mutation
+          await removeUserSelected({ id: message._id as Id<"userSelectedMessages"> });
+        }
         toast.success("Scheduled message deleted successfully");
       } catch (error) {
         toast.error("Failed to delete scheduled message");
@@ -56,28 +63,37 @@ export function MessagesTab() {
           message: formData.message,
           scheduledFor: new Date(formData.scheduledFor).getTime(),
           notes: formData.notes || undefined,
-          category: formData.category && formData.category !== "none" ? formData.category : undefined,
-          templateId: formData.templateId && formData.templateId !== "none" ? (formData.templateId as Id<"messageTemplates">) : undefined,
         });
         toast.success("Message updated successfully");
-      } else if (formData.messageType === "group") {
+      } else if (formData.messageType === "custom") {
+        // Schedule custom study message for delivery context
+        // For now, both Individual (per-member) and Group modes schedule per-member messages
         await createForGroup({
           groupId: formData.groupId as Id<"groups">,
-          templateId: formData.templateId && formData.templateId !== "none" ? (formData.templateId as Id<"messageTemplates">) : undefined,
           message: formData.message,
           scheduledFor: new Date(formData.scheduledFor).getTime(),
           notes: formData.notes || undefined,
-          category: formData.category && formData.category !== "none" ? formData.category : undefined,
+        });
+        toast.success(
+          (formData.sendMode === "group")
+            ? "Scheduled message to group (per member)"
+            : "Messages scheduled for all group members"
+        );
+      } else if (formData.messageType === "group") {
+        // Legacy fallback path
+        await createForGroup({
+          groupId: formData.groupId as Id<"groups">,
+          message: formData.message,
+          scheduledFor: new Date(formData.scheduledFor).getTime(),
+          notes: formData.notes || undefined,
         });
         toast.success("Messages scheduled for all group members");
       } else {
         await createMessage({
           contactId: formData.contactId as Id<"contacts">,
-          templateId: formData.templateId && formData.templateId !== "none" ? (formData.templateId as Id<"messageTemplates">) : undefined,
           message: formData.message,
           scheduledFor: new Date(formData.scheduledFor).getTime(),
           notes: formData.notes || undefined,
-          category: formData.category && formData.category !== "none" ? formData.category : undefined,
         });
         toast.success("Message scheduled successfully");
       }
@@ -90,10 +106,29 @@ export function MessagesTab() {
     }
   };
 
+  const handleInlineUpdate = async (
+    row: ScheduledMessage,
+    patch: Partial<Pick<ScheduledMessage, "message" | "scheduledFor" | "notes">>
+  ) => {
+    try {
+      await updateMessage({
+        id: row._id,
+        message: patch.message ?? row.message,
+        scheduledFor: patch.scheduledFor ?? row.scheduledFor,
+        notes: patch.notes ?? row.notes,
+      })
+      toast.success("Scheduled message updated")
+    } catch (error) {
+      toast.error("Failed to update scheduled message")
+      throw error
+    }
+  }
+
   const columns = createMessageColumns({
     onEdit: handleEdit,
     onDelete: handleDelete,
     onDuplicate: handleDuplicate,
+    onUpdate: handleInlineUpdate,
   });
 
   return (

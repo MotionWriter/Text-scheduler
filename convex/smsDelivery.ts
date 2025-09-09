@@ -252,7 +252,8 @@ export const getPendingStudyMessages = internalQuery({
   args: {
     userId: v.id("users"),
     currentTime: v.number(),
-    limit: v.optional(v.number())
+    limit: v.optional(v.number()),
+    startOfDay: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const messages = await ctx.db
@@ -262,6 +263,7 @@ export const getPendingStudyMessages = internalQuery({
         q.and(
           q.eq(q.field("isScheduled"), true),
           q.lte(q.field("scheduledAt"), args.currentTime),
+          args.startOfDay ? q.gte(q.field("scheduledAt"), args.startOfDay) : q.eq(1, 1),
           q.or(
             q.eq(q.field("deliveryStatus"), undefined),
             q.eq(q.field("deliveryStatus"), "pending")
@@ -302,6 +304,7 @@ export const getPendingStudyMessages = internalQuery({
         return {
           id: message._id,
           userId: message.userId,
+          lessonId: message.lessonId,
           messageContent,
           messageType,
           lessonTitle,
@@ -316,7 +319,78 @@ export const getPendingStudyMessages = internalQuery({
       })
     );
 
-    return enhancedMessages;
+    // Aggregate by lessonId + scheduledAt + messageContent
+    const groups = new Map<string, any[]>();
+    for (const msg of enhancedMessages) {
+      const key = `${String(msg.lessonId)}|${msg.scheduledAt}|${msg.messageContent}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(msg);
+    }
+
+    const aggregated: any[] = [];
+    for (const [key, items] of groups) {
+      const sample = items[0];
+      const phones = items
+        .map((i: any) => i.user?.phone)
+        .filter((p: any) => typeof p === 'string' && p.length > 0);
+      const messageIds = items.map((i: any) => String(i.id));
+      aggregated.push({
+        id: `agg:study:${key}`,
+        userId: sample.userId,
+        messageContent: sample.messageContent,
+        messageType: sample.messageType,
+        lessonTitle: sample.lessonTitle,
+        scheduledAt: sample.scheduledAt,
+        deliveryAttempts: items.reduce((acc: number, i: any) => acc + (i.deliveryAttempts || 0), 0),
+        user: {
+          name: undefined,
+          phone: phones.join(','),
+          email: undefined,
+        },
+        messageIds,
+      });
+    }
+
+    return aggregated;
+  }
+});
+
+// Bulk mark study messages delivered
+export const markStudyMessagesDelivered = internalMutation({
+  args: {
+    messageIds: v.array(v.id("userSelectedMessages")),
+    deliveredAt: v.number(),
+    externalMessageId: v.optional(v.string())
+  },
+  handler: async (ctx, args) => {
+    for (const id of args.messageIds) {
+      await ctx.db.patch(id, {
+        deliveryStatus: "sent",
+        actualDeliveryTime: args.deliveredAt,
+        deliveryError: undefined
+      });
+    }
+  }
+});
+
+// Bulk mark study messages failed
+export const markStudyMessagesFailed = internalMutation({
+  args: {
+    messageIds: v.array(v.id("userSelectedMessages")),
+    error: v.string(),
+    failedAt: v.number()
+  },
+  handler: async (ctx, args) => {
+    for (const id of args.messageIds) {
+      const message = await ctx.db.get(id);
+      const attempts = ((message as any)?.deliveryAttempts || 0) + 1;
+      await ctx.db.patch(id, {
+        deliveryStatus: "failed",
+        deliveryError: args.error,
+        deliveryAttempts: attempts,
+        lastDeliveryAttempt: args.failedAt
+      });
+    }
   }
 });
 

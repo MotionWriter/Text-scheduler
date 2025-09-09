@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { Id } from "../../convex/_generated/dataModel";
+import { DatePickerPopover } from "./ui/date-picker";
 
 interface MessageSelectorProps {
   lessonId: Id<"lessons">;
@@ -19,8 +20,9 @@ export function MessageSelector({ lessonId, lessonTitle, onBack }: MessageSelect
   // Queries
   const predefinedMessages = useQuery(api.predefinedMessages.listByLesson, { lessonId }) || [];
   const userCustomMessages = useQuery(api.userCustomMessages.getForLesson, { lessonId }) || [];
-  const customMessageCount = useQuery(api.userCustomMessages.getCountForLesson, { lessonId }) || 0;
+  const customMessageCountData = useQuery(api.userCustomMessages.getCountForLesson, { lessonId }) || { count: 0, remaining: 2, canCreate: true };
   const selectedMessages = useQuery(api.userSelectedMessages.getForLesson, { lessonId }) || [];
+  const lesson = useQuery(api.lessons.get, { id: lessonId });
 
   // Mutations
   const createCustomMessage = useMutation(api.userCustomMessages.create);
@@ -31,7 +33,7 @@ export function MessageSelector({ lessonId, lessonTitle, onBack }: MessageSelect
   const removeSelectedMessage = useMutation(api.userSelectedMessages.remove);
   const updateScheduling = useMutation(api.userSelectedMessages.updateScheduling);
 
-  const canCreateCustomMessage = customMessageCount < 2;
+  const canCreateCustomMessage = customMessageCountData.canCreate;
   const characterCount = customMessageContent.length;
   const isValidCustomMessage = characterCount > 0 && characterCount <= 280;
 
@@ -111,10 +113,19 @@ export function MessageSelector({ lessonId, lessonTitle, onBack }: MessageSelect
     }
   };
 
-  const handleScheduleMessage = async (id: Id<"userSelectedMessages">, isScheduled: boolean, scheduledAt?: number) => {
+  const handleScheduleMessage = async (id: Id<"userSelectedMessages">, scheduledAt: number) => {
     try {
-      await updateScheduling({ id, isScheduled, scheduledAt });
-      toast.success(isScheduled ? "Message scheduled successfully" : "Message unscheduled successfully");
+      await updateScheduling({ id, isScheduled: true, scheduledAt });
+      toast.success("Message scheduled successfully");
+    } catch (error) {
+      toast.error("Failed to update message scheduling");
+    }
+  };
+
+  const handleUnscheduleMessage = async (id: Id<"userSelectedMessages">) => {
+    try {
+      await updateScheduling({ id, isScheduled: false, scheduledAt: undefined });
+      toast.success("Message unscheduled successfully");
     } catch (error) {
       toast.error("Failed to update message scheduling");
     }
@@ -136,6 +147,52 @@ export function MessageSelector({ lessonId, lessonTitle, onBack }: MessageSelect
         ? selected.predefinedMessageId === messageId
         : selected.customMessageId === messageId
     );
+  };
+
+  // Allowed dates utility
+  const msInDay = 24 * 60 * 60 * 1000;
+  const defaultTime = (lesson?.defaultSendTime as string) || "09:00";
+  const activeStart = typeof lesson?.activeWeekStart === 'number' ? lesson!.activeWeekStart : undefined;
+  // Allowed window: Thu–Sun of prior week, then Mon–Sun of active week
+  const minDate = activeStart ? activeStart - 4 * msInDay : undefined // Thursday prior
+  const maxDate = activeStart ? activeStart + 6 * msInDay : undefined // Sunday of active week
+
+  // Per-selection scheduling state
+  const [scheduleDrafts, setScheduleDrafts] = useState<Record<string, { date: string; time: string }>>({});
+
+  useEffect(() => {
+    // Initialize drafts when selections or lesson change
+    const next: Record<string, { date: string; time: string }> = {};
+    selectedMessages.forEach((sel: any) => {
+      if (sel.scheduledAt) {
+        const d = new Date(sel.scheduledAt);
+        const local = new Date(d.getTime() - d.getTimezoneOffset()*60000);
+        next[sel._id] = { date: local.toISOString().slice(0,10), time: local.toISOString().slice(11,16) };
+      } else if (activeStart) {
+        // default to active week start + default time
+        const [hh, mm] = defaultTime.split(":");
+        const base = new Date(activeStart);
+        const localBase = new Date(base.getTime() - base.getTimezoneOffset()*60000);
+        next[sel._id] = { date: localBase.toISOString().slice(0,10), time: `${hh.padStart(2,'0')}:${mm.padStart(2,'0')}` };
+      } else {
+        // fallback to today + default time
+        const now = new Date();
+        const local = new Date(now.getTime() - now.getTimezoneOffset()*60000);
+        next[sel._id] = { date: local.toISOString().slice(0,10), time: defaultTime };
+      }
+    });
+    setScheduleDrafts(next);
+  }, [JSON.stringify(selectedMessages), activeStart, defaultTime]);
+
+  const combineLocalTs = (dateStr: string, timeStr: string) => {
+    const dt = new Date(`${dateStr}T${timeStr}`);
+    return dt.getTime();
+  };
+
+  const isAllowedDate = (dateStr: string) => {
+    if (!activeStart) return true;
+    const ts = new Date(`${dateStr}T00:00`).getTime();
+    return ts >= (minDate as number) && ts <= (maxDate as number);
   };
 
   return (
@@ -174,7 +231,7 @@ export function MessageSelector({ lessonId, lessonTitle, onBack }: MessageSelect
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
             }`}
           >
-            ✏️ Custom Messages ({customMessageCount}/2)
+            ✏️ Custom Messages ({customMessageCountData.count}/2)
           </button>
           <button
             onClick={() => setActiveTab("selected")}
@@ -423,53 +480,104 @@ export function MessageSelector({ lessonId, lessonTitle, onBack }: MessageSelect
                           )}
                         </div>
                         <p className="text-gray-900 text-sm">{message.content}</p>
-                        {selected.scheduledAt && (
-                          <div className="mt-2 space-y-1">
-                            <p className="text-gray-500 text-xs">
-                              Scheduled for: {new Date(selected.scheduledAt).toLocaleString()}
+
+                        <div className="mt-3 space-y-2">
+                          {!lesson?.activeWeekStart && (
+                            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 inline-block">
+                              Admin has not set an active week for this lesson yet.
                             </p>
-                            {selected.deliveryStatus && (
-                              <div className="flex items-center space-x-2">
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                  selected.deliveryStatus === "sent" 
-                                    ? "bg-green-100 text-green-800"
-                                    : selected.deliveryStatus === "failed"
-                                    ? "bg-red-100 text-red-800"
-                                    : selected.deliveryStatus === "pending"
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : "bg-gray-100 text-gray-800"
-                                }`}>
-                                  {selected.deliveryStatus === "sent" && "✅ Sent"}
-                                  {selected.deliveryStatus === "failed" && "❌ Failed"}
-                                  {selected.deliveryStatus === "pending" && "⏳ Pending"}
-                                  {selected.deliveryStatus === "cancelled" && "🚫 Cancelled"}
-                                </span>
-                                {selected.actualDeliveryTime && selected.deliveryStatus === "sent" && (
-                                  <span className="text-xs text-gray-500">
-                                    Delivered: {new Date(selected.actualDeliveryTime).toLocaleString()}
-                                  </span>
-                                )}
-                                {selected.deliveryError && selected.deliveryStatus === "failed" && (
-                                  <span className="text-xs text-red-600" title={selected.deliveryError}>
-                                    Error: {selected.deliveryError.substring(0, 30)}...
-                                  </span>
-                                )}
-                              </div>
+                          )}
+                          <div className="flex items-center gap-2">
+                            {activeStart ? (
+                              <DatePickerPopover
+                                value={scheduleDrafts[selected._id]?.date || ""}
+                                onChange={(val) => setScheduleDrafts(prev => ({ ...prev, [selected._id]: { ...(prev[selected._id] || { time: defaultTime }), date: val } }))}
+                                minDate={minDate}
+                                maxDate={maxDate}
+                              />
+                            ) : (
+                              <input
+                                type="date"
+                                value={scheduleDrafts[selected._id]?.date || ""}
+                                onChange={(e) => setScheduleDrafts(prev => ({ ...prev, [selected._id]: { ...(prev[selected._id] || { time: defaultTime }), date: e.target.value } }))}
+                                className="px-2 py-1 border rounded text-sm"
+                              />
+                            )}
+
+                            <select
+                              value={scheduleDrafts[selected._id]?.time || defaultTime}
+                              onChange={(e) => setScheduleDrafts(prev => ({ ...prev, [selected._id]: { ...(prev[selected._id] || { date: allowedDates[0]?.value || "" }), time: e.target.value } }))}
+                              className="px-2 py-1 border rounded text-sm"
+                            >
+                              {Array.from({ length: 96 }).map((_, idx) => {
+                                const h = String(Math.floor(idx / 4)).padStart(2, '0');
+                                const m = String((idx % 4) * 15).padStart(2, '0');
+                                const val = `${h}:${m}`;
+                                return <option key={val} value={val}>{val}</option>;
+                              })}
+                            </select>
+
+                            <button
+                              onClick={() => {
+                                const draft = scheduleDrafts[selected._id];
+                                if (!draft?.date || !draft?.time) {
+                                  toast.error("Please pick a date and time.");
+                                  return;
+                                }
+                                if (!isAllowedDate(draft.date)) {
+                                  toast.error("Selected date is not within the allowed window.");
+                                  return;
+                                }
+                                const ts = combineLocalTs(draft.date, draft.time);
+                                handleScheduleMessage(selected._id, ts);
+                              }}
+                              className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                            >
+                              {selected.isScheduled ? "Reschedule" : "Schedule"}
+                            </button>
+
+                            {selected.isScheduled && (
+                              <button
+                                onClick={() => handleUnscheduleMessage(selected._id)}
+                                className="text-red-600 hover:text-red-800 text-sm"
+                              >
+                                Unschedule
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {selected.deliveryStatus && (
+                          <div className="flex items-center space-x-2">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                              selected.deliveryStatus === "sent" 
+                                ? "bg-green-100 text-green-800"
+                                : selected.deliveryStatus === "failed"
+                                ? "bg-red-100 text-red-800"
+                                : selected.deliveryStatus === "pending"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}>
+                              {selected.deliveryStatus === "sent" && "✅ Sent"}
+                              {selected.deliveryStatus === "failed" && "❌ Failed"}
+                              {selected.deliveryStatus === "pending" && "⏳ Pending"}
+                              {selected.deliveryStatus === "cancelled" && "🚫 Cancelled"}
+                            </span>
+                            {selected.actualDeliveryTime && selected.deliveryStatus === "sent" && (
+                              <span className="text-xs text-gray-500">
+                                Delivered: {new Date(selected.actualDeliveryTime).toLocaleString()}
+                              </span>
+                            )}
+                            {selected.deliveryError && selected.deliveryStatus === "failed" && (
+                              <span className="text-xs text-red-600" title={selected.deliveryError}>
+                                Error: {selected.deliveryError.substring(0, 30)}...
+                              </span>
                             )}
                           </div>
                         )}
                       </div>
+
                       <div className="flex gap-2 ml-4">
-                        <button
-                          onClick={() => handleScheduleMessage(selected._id, !selected.isScheduled, selected.scheduledAt || Date.now())}
-                          className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                            selected.isScheduled
-                              ? "bg-green-100 text-green-700 hover:bg-green-200"
-                              : "bg-blue-600 text-white hover:bg-blue-700"
-                          }`}
-                        >
-                          {selected.isScheduled ? "Unschedule" : "Schedule"}
-                        </button>
                         <button
                           onClick={() => handleRemoveSelectedMessage(selected._id)}
                           className="text-red-600 hover:text-red-900 text-sm font-medium"

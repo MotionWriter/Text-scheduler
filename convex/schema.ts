@@ -59,8 +59,12 @@ const applicationTables = {
     name: v.string(),
     lastUsed: v.optional(v.number()),
     isActive: v.boolean(),
+    // Rotation metadata
+    replacesKeyId: v.optional(v.id("apiKeys")),
+    graceUntil: v.optional(v.number()),
   }).index("by_user", ["userId"])
-    .index("by_key_hash", ["keyHash"]),
+    .index("by_key_hash", ["keyHash"])
+    .index("by_replaces", ["replacesKeyId"]),
 
   // New core tables for study book system
   studyBooks: defineTable({
@@ -81,9 +85,14 @@ const applicationTables = {
     description: v.optional(v.string()),
     createdAt: v.number(),
     isActive: v.boolean(),
+    // Scheduling configuration for Study Messages
+    // activeWeekStart: start of the active week in ms (local midnight recommended)
+    activeWeekStart: v.optional(v.number()),
+    // defaultSendTime: "HH:mm" (24h)
+    defaultSendTime: v.optional(v.string()),
   })
-    .index("by_study_book", ["studyBookId"])
-    .index("by_study_book_number", ["studyBookId", "lessonNumber"])
+    .index("by_study_book", ["studyBookId"]) 
+    .index("by_study_book_number", ["studyBookId", "lessonNumber"]) 
     .index("by_active", ["isActive"]),
 
   predefinedMessages: defineTable({
@@ -149,6 +158,8 @@ const extendedUsersTable = defineTable({
   isAnonymous: v.optional(v.boolean()),
   // New field for admin functionality
   isAdmin: v.optional(v.boolean()),
+  // New field for Apple Shortcut verification
+  isVerified: v.optional(v.boolean()),
 })
   .index("email", ["email"])
   .index("phone", ["phone"]);
