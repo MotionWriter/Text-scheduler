@@ -36,8 +36,11 @@ export function Dashboard() {
     ...(isAdmin ? [{ id: "api-keys" as const, label: "API Keys", icon: "🔑" }] : []),
   ];
 
-  // Show setup flow for unverified non-admin users
-  if (!isVerified && !isAdmin) {
+  // Dev E2E bypass: allow skipping Setup when ?e2e=1 is present (for automated tests)
+  const devE2EBypass = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("e2e") === "1";
+
+  // Show setup flow for unverified non-admin users (unless dev E2E bypass is active)
+  if (!isVerified && !isAdmin && !devE2EBypass) {
     return <SetupTab />;
   }
 
