@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { Id } from "../../convex/_generated/dataModel";
+import { Button } from "./ui/button";
 
 export function TemplatesTab() {
   const templates = useQuery(api.messageTemplates.list) || [];
@@ -72,12 +73,7 @@ export function TemplatesTab() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Message Templates</h2>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Add Template
-        </button>
+        <Button onClick={() => setShowForm(true)}>Add Template</Button>
       </div>
 
       {showForm && (
@@ -152,23 +148,13 @@ export function TemplatesTab() {
         ) : (
           templates.map((template) => (
             <div key={template._id} className="bg-white p-6 rounded-lg border shadow-sm">
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="text-lg font-semibold text-gray-900">{template.name}</h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(template)}
-                    className="text-blue-600 hover:text-blue-900 text-sm"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(template._id)}
-                    className="text-red-600 hover:text-red-900 text-sm"
-                  >
-                    Delete
-                  </button>
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="text-lg font-semibold text-gray-900">{template.name}</h3>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" onClick={() => handleEdit(template)} className="text-sm">Edit</Button>
+                    <Button variant="danger" onClick={() => handleDelete(template._id)} className="text-sm">Delete</Button>
+                  </div>
                 </div>
-              </div>
               {template.category && (
                 <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mb-3">
                   {template.category}

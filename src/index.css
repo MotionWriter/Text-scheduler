@@ -5,8 +5,8 @@
 @layer base {
   :root {
     /* Design tokens tuned to requested palette (no dark mode) */
-    /* Page background: Alabaster #F1EDE4 */
-    --background: 42 33% 93%;
+    /* Page background: Alabaster #F1EDE4 (lightened toward white) */
+    --background: 42 35% 96%;
     /* Foreground uses the dark tone #4F4F51 */
     --foreground: 240 3% 31%;
 
@@ -38,8 +38,8 @@
     --destructive-foreground: 0 0% 100%;
 
     /* UI chrome */
-    --border: 240 10% 85%;
-    --input: 240 10% 85%;
+    --border: 40 15% 86%;
+    --input: 40 15% 86%;
     --ring: 240 3% 31%;
 
     --radius: 0.8rem;
@@ -51,7 +51,7 @@
 
   /* Dark class is intentionally mapped to light tokens (no dark theme) */
   .dark {
-    --background: 42 33% 93%;
+    --background: 42 35% 96%;
     --foreground: 240 3% 31%;
     --card: 0 0% 100%;
     --card-foreground: 240 3% 31%;
@@ -151,6 +151,16 @@
   /* Section typography */
   .section-title { @apply text-2xl font-bold text-foreground; }
   .section-subtitle { @apply text-sm text-muted-foreground; }
+
+  /* Alerts */
+  .alert { @apply rounded-lg border p-4; }
+  .alert-info { @apply alert; background-color: hsl(var(--accent)); color: hsl(var(--accent-foreground)); border-color: hsl(var(--border)); }
+  .alert-warning { @apply alert; background-color: hsl(var(--muted)); color: hsl(var(--foreground)); border-color: hsl(var(--border)); }
+
+  /* Badges */
+  .badge { @apply inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border; }
+  .badge-neutral { @apply badge; background-color: hsl(var(--muted)); color: hsl(var(--muted-foreground)); border-color: hsl(var(--border)); }
+  .badge-primary { @apply badge; background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground)); border-color: hsl(var(--primary)); }
 }
 
 .accent-text {

@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { Id } from "../../convex/_generated/dataModel";
+import { Button } from "./ui/button";
 
 export function GroupsTab() {
   const groups = useQuery(api.groups.list) || [];
@@ -121,12 +122,7 @@ export function GroupsTab() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Groups</h2>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Create Group
-        </button>
+        <Button onClick={() => setShowForm(true)}>Create Group</Button>
       </div>
 
       {showForm && (

@@ -3,6 +3,8 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { Id } from "../../convex/_generated/dataModel";
+import { Button } from "./ui/button";
+import { SectionHeader } from "./ui/SectionHeader";
 
 export function ApiKeysTab() {
   const apiKeys = useQuery(api.apiKeys.list) || [];
@@ -67,97 +69,63 @@ export function ApiKeysTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">API Keys</h2>
-          <p className="text-gray-600 mt-1">
-            Create API keys for your Apple Shortcut to access scheduled messages
-          </p>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Create API Key
-        </button>
-      </div>
+      <SectionHeader
+        title="API Keys"
+        subtitle="Create API keys for your Apple Shortcut to access scheduled messages"
+        right={<Button onClick={() => setShowForm(true)}>Create API Key</Button>}
+      />
 
       {newApiKey && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-green-800 mb-2">
-            API Key Created Successfully!
-          </h3>
-          <p className="text-green-700 mb-3">
-            Please copy this API key now. You won't be able to see it again.
-          </p>
+        <div className="alert-info">
+          <h3 className="text-lg font-semibold mb-2">API Key Created Successfully!</h3>
+          <p className="mb-3">Please copy this API key now. You won't be able to see it again.</p>
           {rotatedFrom && (
-            <div className="text-sm text-green-800 mb-3">
-              This key replaces: <strong>{rotatedFrom}</strong>.
-              The old key will be automatically deactivated after your Shortcut successfully calls
-              GET /api/messages/pending with this new key, or after 24 hours—whichever comes first.
+            <div className="text-sm mb-3">
+              This key replaces: <strong>{rotatedFrom}</strong>. The old key will deactivate on the first successful call with the new key or after 24 hours.
             </div>
           )}
           <div className="flex items-center gap-2">
             <code className="bg-white px-3 py-2 rounded border flex-1 font-mono text-sm">
               {newApiKey}
             </code>
-            <button
-              onClick={() => copyToClipboard(newApiKey)}
-              className="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition-colors"
-            >
-              Copy
-            </button>
+            <Button variant="secondary" onClick={() => copyToClipboard(newApiKey)}>Copy</Button>
           </div>
-          <button
-            onClick={() => setNewApiKey(null)}
-            className="mt-3 text-green-600 hover:text-green-800 text-sm"
-          >
-            Dismiss
-          </button>
+          <div className="mt-3">
+            <Button variant="ghost" onClick={() => setNewApiKey(null)} className="text-sm">Dismiss</Button>
+          </div>
         </div>
       )}
 
       {showForm && (
-        <div className="bg-white p-6 rounded-lg border shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">Create New API Key</h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Key Name *
-              </label>
-              <input
-                type="text"
-                required
-                value={keyName}
-                onChange={(e) => setKeyName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., iPhone Shortcut, Production App"
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Create
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+        <div className="card">
+          <div className="card-body">
+            <h3 className="text-lg font-semibold mb-4">Create New API Key</h3>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Key Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={keyName}
+                  onChange={(e) => setKeyName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., iPhone Shortcut, Production App"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button type="submit">Create</Button>
+                <Button type="button" variant="ghost" onClick={() => setShowForm(false)}>Cancel</Button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="text-lg font-semibold text-blue-800 mb-2">
-          API Endpoints for Apple Shortcut
-        </h3>
-        <div className="space-y-2 text-sm text-blue-700">
+      <div className="alert-info">
+        <h3 className="text-lg font-semibold mb-2">API Endpoints for Apple Shortcut</h3>
+        <div className="space-y-2 text-sm">
           <div>
             <strong>Get Pending Messages:</strong>
             <code className="ml-2 bg-white px-2 py-1 rounded">GET /api/messages/pending</code>
@@ -190,7 +158,7 @@ export function ApiKeysTab() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+      <div className="card overflow-hidden">
         {apiKeys.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             No API keys yet. Create your first API key to get started.
@@ -242,28 +210,15 @@ export function ApiKeysTab() {
                       {new Date(key._creationTime).toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleRotate(key._id, key.name)}
-                        className="mr-3 text-blue-600 hover:text-blue-900"
-                      >
+                      <Button variant="ghost" onClick={() => handleRotate(key._id, key.name)} className="mr-2">
                         Rotate
-                      </button>
-                      <button
-                        onClick={() => handleToggle(key._id, key.isActive)}
-                        className={`mr-3 ${
-                          key.isActive 
-                            ? "text-red-600 hover:text-red-900" 
-                            : "text-green-600 hover:text-green-900"
-                        }`}
-                      >
+                      </Button>
+                      <Button variant="ghost" onClick={() => handleToggle(key._id, key.isActive)} className="mr-2">
                         {key.isActive ? "Deactivate" : "Activate"}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(key._id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
+                      </Button>
+                      <Button variant="danger" onClick={() => handleDelete(key._id)}>
                         Delete
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))}

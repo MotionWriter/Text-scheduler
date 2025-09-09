@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { Id } from "../../convex/_generated/dataModel";
+import { Button } from "./ui/button";
 
 export function ContactsTab() {
   const contacts = useQuery(api.contacts.list) || [];
@@ -262,18 +263,8 @@ export function ContactsTab() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Contacts</h2>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowBulk(true)}
-            className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            Add Contacts In Bulk
-          </button>
-          <button
-            onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Add Contact
-          </button>
+          <Button variant="ghost" onClick={() => setShowBulk(true)}>Add Contacts In Bulk</Button>
+          <Button onClick={() => setShowForm(true)}>Add Contact</Button>
         </div>
       </div>
 
@@ -476,18 +467,8 @@ export function ContactsTab() {
                       {contact.notes || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(contact)}
-                        className="text-blue-600 hover:text-blue-900 mr-3"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(contact._id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
+                      <Button variant="ghost" onClick={() => handleEdit(contact)} className="mr-2">Edit</Button>
+                      <Button variant="danger" onClick={() => handleDelete(contact._id)}>Delete</Button>
                     </td>
                   </tr>
                 ))}
