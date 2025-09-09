@@ -50,12 +50,12 @@ export function DeliveryHistoryView({ onBack }: DeliveryHistoryViewProps) {
 
   const getStatusBadge = (status: string) => {
     const statusClasses = {
-      pending: "bg-yellow-100 text-yellow-800",
-      sent: "bg-green-100 text-green-800", 
-      failed: "bg-red-100 text-red-800",
-      cancelled: "bg-gray-100 text-gray-800",
-      unprocessed: "bg-blue-100 text-blue-800"
-    };
+      pending: "bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))]",
+      sent: "bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]", 
+      failed: "bg-[hsl(var(--error))] text-[hsl(var(--error-foreground))]",
+      cancelled: "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]",
+      unprocessed: "bg-[hsl(var(--info))] text-[hsl(var(--info-foreground))]",
+    } as const;
 
     const statusIcons = {
       pending: "⏳",
@@ -63,13 +63,13 @@ export function DeliveryHistoryView({ onBack }: DeliveryHistoryViewProps) {
       failed: "❌", 
       cancelled: "🚫",
       unprocessed: "📋"
-    };
+    } as const;
 
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-        statusClasses[status as keyof typeof statusClasses] || statusClasses.unprocessed
+        statusClasses[(status as keyof typeof statusClasses) || "unprocessed"]
       }`}>
-        <span className="mr-1">{statusIcons[status as keyof typeof statusIcons] || statusIcons.unprocessed}</span>
+        <span className="mr-1">{statusIcons[(status as keyof typeof statusIcons) || "unprocessed"]}</span>
         {status || "unprocessed"}
       </span>
     );
@@ -108,51 +108,51 @@ export function DeliveryHistoryView({ onBack }: DeliveryHistoryViewProps) {
 
       {/* Statistics Cards */}
       {deliveryStats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white p-6 rounded-lg border shadow-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="bg-white p-4 sm:p-6 rounded-lg border shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Messages</p>
-                <p className="text-2xl font-bold text-gray-900">{deliveryStats.total}</p>
+                <p className="text-sm font-medium text-muted-foreground">Total Messages</p>
+                <p className="text-2xl font-bold text-foreground">{deliveryStats.total}</p>
               </div>
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-blue-600 text-sm">📊</span>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[hsl(var(--info))]">
+                <span className="text-[hsl(var(--info-foreground))] text-sm">📊</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg border shadow-sm">
+          <div className="bg-white p-4 sm:p-6 rounded-lg border shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Delivered</p>
-                <p className="text-2xl font-bold text-green-600">{deliveryStats.sent}</p>
+                <p className="text-sm font-medium text-muted-foreground">Delivered</p>
+                <p className="text-2xl font-bold text-[hsl(var(--success-foreground))]">{deliveryStats.sent}</p>
               </div>
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                <span className="text-green-600 text-sm">✅</span>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[hsl(var(--success))]">
+                <span className="text-[hsl(var(--success-foreground))] text-sm">✅</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg border shadow-sm">
+          <div className="bg-white p-4 sm:p-6 rounded-lg border shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Success Rate</p>
-                <p className="text-2xl font-bold text-gray-900">{deliveryStats.successRate}%</p>
+                <p className="text-sm font-medium text-muted-foreground">Success Rate</p>
+                <p className="text-2xl font-bold text-foreground">{deliveryStats.successRate}%</p>
               </div>
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                <span className="text-purple-600 text-sm">📈</span>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[hsl(var(--accent))]">
+                <span className="text-[hsl(var(--accent-foreground))] text-sm">📈</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg border shadow-sm">
+          <div className="bg-white p-4 sm:p-6 rounded-lg border shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Avg Delay</p>
-                <p className="text-2xl font-bold text-gray-900">{deliveryStats.avgDeliveryTime}m</p>
+                <p className="text-sm font-medium text-muted-foreground">Avg Delay</p>
+                <p className="text-2xl font-bold text-foreground">{deliveryStats.avgDeliveryTime}m</p>
               </div>
-              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                <span className="text-orange-600 text-sm">⏱️</span>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[hsl(var(--warning))]">
+                <span className="text-[hsl(var(--warning-foreground))] text-sm">⏱️</span>
               </div>
             </div>
           </div>

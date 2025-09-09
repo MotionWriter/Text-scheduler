@@ -63,16 +63,16 @@ export function DeliveryManagementTab() {
 
   const getStatusBadge = (status: string) => {
     const statusClasses = {
-      pending: "bg-yellow-100 text-yellow-800",
-      sent: "bg-green-100 text-green-800",
-      failed: "bg-red-100 text-red-800",
-      cancelled: "bg-gray-100 text-gray-800",
-      unprocessed: "bg-blue-100 text-blue-800"
-    };
+      pending: "bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))]",
+      sent: "bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]",
+      failed: "bg-[hsl(var(--error))] text-[hsl(var(--error-foreground))]",
+      cancelled: "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]",
+      unprocessed: "bg-[hsl(var(--info))] text-[hsl(var(--info-foreground))]",
+    } as const;
 
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-        statusClasses[status as keyof typeof statusClasses] || statusClasses.unprocessed
+        statusClasses[(status as keyof typeof statusClasses) || "unprocessed"]
       }`}>
         {status || "unprocessed"}
       </span>
@@ -104,63 +104,63 @@ export function DeliveryManagementTab() {
 
       {/* Statistics Cards */}
       {systemStats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="bg-white p-6 rounded-lg border shadow-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="bg-white p-4 sm:p-6 rounded-lg border shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Messages</p>
-                <p className="text-2xl font-bold text-gray-900">{systemStats.total}</p>
+                <p className="text-sm font-medium text-muted-foreground">Total Messages</p>
+                <p className="text-2xl font-bold text-foreground">{systemStats.total}</p>
               </div>
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-blue-600 text-sm">📊</span>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[hsl(var(--info))]">
+                <span className="text-[hsl(var(--info-foreground))] text-sm">📊</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg border shadow-sm">
+          <div className="bg-white p-4 sm:p-6 rounded-lg border shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Sent Successfully</p>
-                <p className="text-2xl font-bold text-green-600">{systemStats.sent}</p>
+                <p className="text-sm font-medium text-muted-foreground">Sent Successfully</p>
+                <p className="text-2xl font-bold text-[hsl(var(--success-foreground))]">{systemStats.sent}</p>
               </div>
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                <span className="text-green-600 text-sm">✅</span>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[hsl(var(--success))]">
+                <span className="text-[hsl(var(--success-foreground))] text-sm">✅</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg border shadow-sm">
+          <div className="bg-white p-4 sm:p-6 rounded-lg border shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Failed</p>
-                <p className="text-2xl font-bold text-red-600">{systemStats.failed}</p>
+                <p className="text-sm font-medium text-muted-foreground">Failed</p>
+                <p className="text-2xl font-bold text-[hsl(var(--error-foreground))]">{systemStats.failed}</p>
               </div>
-              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                <span className="text-red-600 text-sm">❌</span>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[hsl(var(--error))]">
+                <span className="text-[hsl(var(--error-foreground))] text-sm">❌</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg border shadow-sm">
+          <div className="bg-white p-4 sm:p-6 rounded-lg border shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Success Rate</p>
-                <p className="text-2xl font-bold text-gray-900">{systemStats.successRate}%</p>
+                <p className="text-sm font-medium text-muted-foreground">Success Rate</p>
+                <p className="text-2xl font-bold text-foreground">{systemStats.successRate}%</p>
               </div>
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                <span className="text-purple-600 text-sm">📈</span>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[hsl(var(--accent))]">
+                <span className="text-[hsl(var(--accent-foreground))] text-sm">📈</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg border shadow-sm">
+          <div className="bg-white p-4 sm:p-6 rounded-lg border shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Avg Delay</p>
-                <p className="text-2xl font-bold text-gray-900">{systemStats.avgDeliveryTime}m</p>
+                <p className="text-sm font-medium text-muted-foreground">Avg Delay</p>
+                <p className="text-2xl font-bold text-foreground">{systemStats.avgDeliveryTime}m</p>
               </div>
-              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                <span className="text-orange-600 text-sm">⏱️</span>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[hsl(var(--warning))]">
+                <span className="text-[hsl(var(--warning-foreground))] text-sm">⏱️</span>
               </div>
             </div>
           </div>

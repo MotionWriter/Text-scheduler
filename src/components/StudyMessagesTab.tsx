@@ -48,8 +48,8 @@ export function StudyMessagesTab() {
       {/* Header with breadcrumb navigation */}
       <div className="flex justify-between items-center">
         <div className="space-y-1">
-          <h2 className="text-2xl font-bold text-gray-900">Study Messages</h2>
-          <nav className="flex space-x-2 text-sm text-gray-600">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground">Study Messages</h2>
+          <nav className="flex space-x-2 text-sm sm:text-base text-muted-foreground">
             <button 
               onClick={() => setActiveView("books")}
               className={`hover:text-blue-600 ${activeView === "books" ? "font-medium text-blue-600" : ""}`}

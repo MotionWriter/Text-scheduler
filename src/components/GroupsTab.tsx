@@ -4,6 +4,8 @@ import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { Id } from "../../convex/_generated/dataModel";
 import { Button } from "./ui/button";
+import { MoreHorizontal } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export function GroupsTab() {
   const groups = useQuery(api.groups.list) || [];
@@ -232,7 +234,7 @@ export function GroupsTab() {
                           </p>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="hidden md:flex gap-2">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -251,6 +253,19 @@ export function GroupsTab() {
                         >
                           Delete
                         </button>
+                      </div>
+                      <div className="md:hidden">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="icon" className="h-10 w-10 min-h-[44px]">
+                              <MoreHorizontal className="h-5 w-5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(group); }}>Edit</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(group._id); }}>Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                     {group.description && (
@@ -299,12 +314,26 @@ export function GroupsTab() {
                             <p className="font-medium text-gray-900">{member?.name}</p>
                             <p className="text-sm text-gray-500">{member?.phoneNumber}</p>
                           </div>
-                          <button
-                            onClick={() => handleRemoveMember(member!._id)}
-                            className="text-red-600 hover:text-red-900 text-sm"
-                          >
-                            Remove
-                          </button>
+                          <div className="hidden md:block">
+                            <button
+                              onClick={() => handleRemoveMember(member!._id)}
+                              className="text-red-600 hover:text-red-900 text-sm"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                          <div className="md:hidden">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="icon" className="h-10 w-10 min-h-[44px]">
+                                  <MoreHorizontal className="h-5 w-5" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-36">
+                                <DropdownMenuItem className="text-destructive" onClick={() => handleRemoveMember(member!._id)}>Remove</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -327,12 +356,26 @@ export function GroupsTab() {
                             <p className="font-medium text-gray-900">{contact.name}</p>
                             <p className="text-sm text-gray-500">{contact.phoneNumber}</p>
                           </div>
-                          <button
-                            onClick={() => handleAddMember(contact._id)}
-                            className="text-blue-600 hover:text-blue-900 text-sm"
-                          >
-                            Add
-                          </button>
+                          <div className="hidden md:block">
+                            <button
+                              onClick={() => handleAddMember(contact._id)}
+                              className="text-blue-600 hover:text-blue-900 text-sm"
+                            >
+                              Add
+                            </button>
+                          </div>
+                          <div className="md:hidden">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="icon" className="h-10 w-10 min-h-[44px]">
+                                  <MoreHorizontal className="h-5 w-5" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-36">
+                                <DropdownMenuItem onClick={() => handleAddMember(contact._id)}>Add</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
                       ))}
                     </div>

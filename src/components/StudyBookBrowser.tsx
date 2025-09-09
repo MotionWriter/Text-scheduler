@@ -21,8 +21,8 @@ export function StudyBookBrowser({ studyBooks, onSelectStudyBook }: StudyBookBro
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-semibold text-gray-900">Available Study Books</h3>
-          <p className="text-gray-600 text-sm">Choose a study book to begin your journey</p>
+          <h3 className="text-xl sm:text-2xl font-semibold text-foreground">Available Study Books</h3>
+          <p className="text-sm sm:text-base text-muted-foreground">Choose a study book to begin your journey</p>
         </div>
       </div>
       
@@ -39,15 +39,15 @@ export function StudyBookBrowser({ studyBooks, onSelectStudyBook }: StudyBookBro
           </div>
         ) : (
           activeBooks.map((book) => (
-            <div key={book._id} className="bg-white p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow">
+            <div key={book._id} className="bg-white p-4 sm:p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow">
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-lg font-semibold text-gray-900 line-clamp-2">{book.title}</h4>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <h4 className="text-lg font-semibold text-foreground line-clamp-2">{book.title}</h4>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]">
                     {book.totalLessons} lessons
                   </span>
                 </div>
-                <p className="text-gray-600 text-sm line-clamp-3 mb-4">{book.description}</p>
+                <p className="text-muted-foreground text-sm line-clamp-3 mb-4">{book.description}</p>
               </div>
               
               <div className="flex items-center justify-between pt-4 border-t border-gray-100">
@@ -57,7 +57,7 @@ export function StudyBookBrowser({ studyBooks, onSelectStudyBook }: StudyBookBro
                 </div>
                 <button
                   onClick={() => onSelectStudyBook(book._id)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+                  className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors text-sm font-medium"
                 >
                   Start Study
                 </button>
@@ -67,22 +67,6 @@ export function StudyBookBrowser({ studyBooks, onSelectStudyBook }: StudyBookBro
         )}
       </div>
       
-      {activeBooks.length > 0 && (
-        <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <span className="text-blue-600 text-lg">💡</span>
-            </div>
-            <div className="ml-3">
-              <h4 className="text-sm font-medium text-blue-900">Getting Started</h4>
-              <p className="text-sm text-blue-700 mt-1">
-                Select a study book to view its lessons and messages. You can create custom messages 
-                for each lesson and schedule reminders to help guide your study journey.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
