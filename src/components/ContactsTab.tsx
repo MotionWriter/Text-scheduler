@@ -7,6 +7,15 @@ import { Button } from "./ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
+function formatPhone(value: string | undefined | null) {
+  if (!value) return "";
+  const digits = String(value).replace(/\D/g, "").slice(0, 10);
+  const len = digits.length;
+  if (len <= 3) return digits;
+  if (len <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
 export function ContactsTab() {
   const contacts = useQuery(api.contacts.list) || [];
   const createContact = useMutation(api.contacts.create);
@@ -197,7 +206,7 @@ export function ContactsTab() {
           continue;
         }
         // Optional light phone normalization: strip spaces
-        const cleanedPhone = phoneNumber.replace(/\s+/g, "");
+        const cleanedPhone = phoneNumber.replace(/\D+/g, "");
         valids.push({
           name,
           phoneNumber: cleanedPhone,
@@ -238,7 +247,7 @@ export function ContactsTab() {
       try {
         await createContact({
           name: c.name,
-          phoneNumber: c.phoneNumber,
+          phoneNumber: c.phoneNumber.replace(/\D/g, ""),
           email: c.email || undefined,
           notes: c.notes || undefined,
         });
@@ -302,8 +311,11 @@ export function ContactsTab() {
                 <input
                   type="tel"
                   required
-                  value={formData.phoneNumber}
-                  onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                  value={formatPhone(formData.phoneNumber)}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                    setFormData({ ...formData, phoneNumber: digits });
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -443,7 +455,7 @@ export function ContactsTab() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="font-medium truncate text-foreground">{contact.name}</div>
-                    <div className="text-sm text-muted-foreground truncate mt-0.5">{contact.phoneNumber}</div>
+                    <div className="text-sm text-muted-foreground truncate mt-0.5">{formatPhone(contact.phoneNumber)}</div>
                     {(contact.email || contact.notes) && (
                       <div className="text-xs text-muted-foreground truncate mt-0.5">
                         {contact.email || contact.notes}
@@ -505,7 +517,7 @@ export function ContactsTab() {
                       {contact.name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {contact.phoneNumber}
+                      {formatPhone(contact.phoneNumber)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {contact.email || "-"}

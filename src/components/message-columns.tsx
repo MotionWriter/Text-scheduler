@@ -301,6 +301,15 @@ function EditableDateTimeCell({
 }
 
 
+function formatPhone(value: string | undefined | null) {
+  if (!value) return "";
+  const digits = String(value).replace(/\D/g, "").slice(0, 10);
+  const len = digits.length;
+  if (len <= 3) return digits;
+  if (len <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
 export const createMessageColumns = ({
   onEdit,
   onDelete,
@@ -347,7 +356,7 @@ export const createMessageColumns = ({
           ) : (
             <>
               <div className="font-medium">{message.contact?.name || 'Unknown Contact'}</div>
-              <div className="text-sm text-muted-foreground">{message.contact?.phoneNumber}</div>
+              <div className="text-sm text-muted-foreground">{formatPhone(message.contact?.phoneNumber || "")}</div>
             </>
           )}
         </div>
@@ -425,21 +434,26 @@ export const createMessageColumns = ({
       const message = row.original
       
       const getStatusColor = (status: string) => {
+        // Use semantic theme tokens for consistent theming
         switch (status) {
           case "pending":
-            return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
+            return "bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] border border-[hsl(var(--border))]"
           case "sent":
-            return "bg-green-100 text-green-800 hover:bg-green-200"
+            return "bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))] border border-[hsl(var(--border))]"
           case "failed":
-            return "bg-red-100 text-red-800 hover:bg-red-200"
+            return "bg-[hsl(var(--error))] text-[hsl(var(--error-foreground))] border border-[hsl(var(--border))]"
+          case "cancelled":
+            return "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] border border-[hsl(var(--border))]"
+          case "unprocessed":
+            return "bg-[hsl(var(--info))] text-[hsl(var(--info-foreground))] border border-[hsl(var(--border))]"
           default:
-            return "bg-gray-100 text-gray-800 hover:bg-gray-200"
+            return "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] border border-[hsl(var(--border))]"
         }
       }
 
       return (
         <div className="space-y-1">
-          <Badge className={`${getStatusColor(status)} border-0`}>
+          <Badge className={`${getStatusColor(status)}`}>
             {status}
           </Badge>
           {message.sentAt && (

@@ -7,6 +7,15 @@ import { Button } from "./ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
+function formatPhone(value: string | undefined | null) {
+  if (!value) return "";
+  const digits = String(value).replace(/\D/g, "").slice(0, 10);
+  const len = digits.length;
+  if (len <= 3) return digits;
+  if (len <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
 export function GroupsTab() {
   const groups = useQuery(api.groups.list) || [];
   const contacts = useQuery(api.contacts.list) || [];
@@ -312,7 +321,7 @@ export function GroupsTab() {
                         >
                           <div>
                             <p className="font-medium text-gray-900">{member?.name}</p>
-                            <p className="text-sm text-gray-500">{member?.phoneNumber}</p>
+                            <p className="text-sm text-gray-500">{formatPhone(member?.phoneNumber)}</p>
                           </div>
                           <div className="hidden md:block">
                             <button
@@ -354,7 +363,7 @@ export function GroupsTab() {
                         >
                           <div>
                             <p className="font-medium text-gray-900">{contact.name}</p>
-                            <p className="text-sm text-gray-500">{contact.phoneNumber}</p>
+                            <p className="text-sm text-gray-500">{formatPhone(contact.phoneNumber)}</p>
                           </div>
                           <div className="hidden md:block">
                             <button
