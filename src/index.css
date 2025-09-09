@@ -93,6 +93,24 @@
   }
 }
 
+/* Theme bridge: map legacy utility colors used in components to theme tokens */
+@layer utilities {
+  /* Primary blues -> theme primary */
+  .bg-blue-600 { background-color: hsl(var(--primary)) !important; }
+  .hover\:bg-blue-700:hover { background-color: hsl(var(--primary) / 0.92) !important; }
+  .text-blue-600 { color: hsl(var(--primary)) !important; }
+  .text-blue-800 { color: hsl(var(--primary)) !important; }
+  .border-blue-500 { border-color: hsl(var(--primary)) !important; }
+  .border-blue-200 { border-color: hsl(var(--secondary)) !important; }
+  .bg-blue-50 { background-color: hsl(var(--accent)) !important; }
+
+  /* Neutrals -> theme neutrals */
+  .bg-gray-50 { background-color: hsl(var(--muted)) !important; }
+  .text-gray-900 { color: hsl(var(--foreground)) !important; }
+  .text-gray-600, .text-gray-500 { color: hsl(var(--muted-foreground)) !important; }
+  .border-gray-200 { border-color: hsl(var(--border)) !important; }
+}
+
 .accent-text {
   @apply text-secondary;
 }
