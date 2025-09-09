@@ -147,8 +147,8 @@ export function MessagesDataTable<TData, TValue>({
       </div>
 
       {/* Filters and search */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
+        <div className="relative w-full sm:flex-1 sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder="Search messages..."
@@ -156,12 +156,12 @@ export function MessagesDataTable<TData, TValue>({
             onChange={(event) =>
               table.getColumn("message")?.setFilterValue(event.target.value)
             }
-            className="pl-10 soft-control"
+            className="pl-10 bg-white"
           />
         </div>
         
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[160px] soft-control">
+          <SelectTrigger className="w-full sm:w-[160px] bg-white">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -174,7 +174,7 @@ export function MessagesDataTable<TData, TValue>({
 
 
         <Select value={groupByFilter} onValueChange={setGroupByFilter}>
-          <SelectTrigger className="w-[160px] soft-control">
+          <SelectTrigger className="w-full sm:w-[160px] bg-white">
             <SelectValue placeholder="Group by" />
           </SelectTrigger>
           <SelectContent>
@@ -185,7 +185,7 @@ export function MessagesDataTable<TData, TValue>({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2 soft-control">
+            <Button variant="outline" className="gap-2 w-full sm:w-auto">
               Columns <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -212,95 +212,97 @@ export function MessagesDataTable<TData, TValue>({
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
-        <Table className="bg-white">
-          <TableHeader className="bg-[hsl(var(--table-header))]">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Loading...
-                </TableCell>
-              </TableRow>
-            ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => {
-                if (row.getIsGrouped()) {
-                  // Group header row
-                  return (
-                    <TableRow key={row.id} className="bg-gradient-to-r from-slate-50 to-gray-50 border-y border-slate-200/60 font-medium shadow-sm">
-                      <TableCell colSpan={columns.length} className="py-3">
-                        <button
-                          onClick={() => row.getToggleExpandedHandler()()}
-                          className="flex items-center gap-3 text-left hover:text-blue-600 transition-colors group w-full"
-                        >
-                          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white border border-slate-200 group-hover:border-blue-300 group-hover:bg-blue-50 transition-all duration-150">
-                            <ChevronRight 
-                              className={`h-3.5 w-3.5 transition-transform duration-200 text-slate-600 group-hover:text-blue-600 ${
-                                row.getIsExpanded() ? 'rotate-90' : ''
-                              }`} 
-                            />
-                          </div>
-                          <span className="capitalize text-slate-700 font-semibold text-sm tracking-wide">
-                            {String(row.getGroupingValue(row.groupingColumnId!))} 
-                            <span className="ml-1.5 text-xs font-normal text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200">
-                              {row.subRows.length}
+      <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table className="min-w-[720px]">
+            <TableHeader className="bg-[hsl(var(--table-header))]">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    )
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                    Loading...
+                  </TableCell>
+                </TableRow>
+              ) : table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => {
+                  if (row.getIsGrouped()) {
+                    // Group header row
+                    return (
+                      <TableRow key={row.id} className="bg-gradient-to-r from-slate-50 to-gray-50 border-y border-slate-200/60 font-medium shadow-sm">
+                        <TableCell colSpan={columns.length} className="py-3">
+                          <button
+                            onClick={() => row.getToggleExpandedHandler()()}
+                            className="flex items-center gap-3 text-left hover:text-blue-600 transition-colors group w-full"
+                          >
+                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white border border-slate-200 group-hover:border-blue-300 group-hover:bg-blue-50 transition-all duration-150">
+                              <ChevronRight 
+                                className={`h-3.5 w-3.5 transition-transform duration-200 text-slate-600 group-hover:text-blue-600 ${
+                                  row.getIsExpanded() ? 'rotate-90' : ''
+                                }`} 
+                              />
+                            </div>
+                            <span className="capitalize text-slate-700 font-semibold text-sm tracking-wide">
+                              {String(row.getGroupingValue(row.groupingColumnId!))} 
+                              <span className="ml-1.5 text-xs font-normal text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200">
+                                {row.subRows.length}
+                              </span>
                             </span>
-                          </span>
-                        </button>
-                      </TableCell>
+                          </button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  }
+                  
+                  // Regular data row
+                  return (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
                     </TableRow>
                   )
-                }
-                
-                // Regular data row
-                return (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                )
-              })
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  <div className="flex flex-col items-center gap-2">
-                    <p className="text-muted-foreground">No scheduled messages found.</p>
-                    <Button variant="outline" onClick={onNewMessage} className="gap-2">
-                      <Plus className="h-4 w-4" />
-                      Schedule your first message
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <p className="text-muted-foreground">No scheduled messages found.</p>
+                      <Button variant="outline" onClick={onNewMessage} className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Schedule your first message
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {/* Pagination */}

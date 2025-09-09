@@ -78,23 +78,46 @@ export function Dashboard() {
         )}
       </div>
 
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                activeTab === tab.id
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+      {/* Tabs */}
+      <div className="rounded-xl border bg-muted p-1 shadow-sm">
+        {/* Mobile compact tab selector */}
+        <div className="sm:hidden mb-2">
+          <div className="max-w-full">
+            <select
+              aria-label="Select tab"
+              className="w-full h-10 rounded-md border border-input bg-white px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value as Tab)}
             >
-              <span className="mr-2">{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+              {tabs.map((t) => (
+                <option key={t.id} value={t.id}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <nav className="flex gap-2" role="tablist" aria-label="Primary">
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`inline-flex items-center gap-2 whitespace-nowrap px-3 py-2 sm:px-4 rounded-lg text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 border ${
+                    isActive
+                      ? "bg-white text-foreground border-primary/30 shadow-sm"
+                      : "text-muted-foreground border-transparent hover:bg-accent hover:text-foreground"
+                  }`}
+                >
+                  <span aria-hidden className="text-base">{tab.icon}</span>
+                  <span>{tab.label}</span>
+                </button>
+              )
+            })}
+          </nav>
+        </div>
       </div>
 
       <div className="mt-6">

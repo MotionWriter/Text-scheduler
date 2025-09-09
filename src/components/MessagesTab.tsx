@@ -6,6 +6,7 @@ import { Id } from "../../convex/_generated/dataModel";
 import { MessagesDataTable } from "./messages-data-table";
 import { createMessageColumns, ScheduledMessage } from "./message-columns";
 import { MessageFormDialog, MessageFormData } from "./message-form-dialog";
+import { MessagesMobileList } from "./messages-mobile-list";
 
 export function MessagesTab() {
   const messages = useQuery(api.allScheduledMessages.listAll) || [];
@@ -133,11 +134,32 @@ export function MessagesTab() {
 
   return (
     <div className="space-y-6">
-      <MessagesDataTable
-        columns={columns}
-        data={messages}
-        onNewMessage={handleNewMessage}
-      />
+      {/* Desktop table */}
+      <div className="hidden md:block">
+        <MessagesDataTable
+          columns={columns}
+          data={messages}
+          onNewMessage={handleNewMessage}
+        />
+      </div>
+
+      {/* Mobile header + list */}
+      <div className="block md:hidden space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Scheduled Messages</h2>
+          </div>
+          <button onClick={handleNewMessage} className="btn">
+            Schedule
+          </button>
+        </div>
+        <MessagesMobileList
+          data={messages as ScheduledMessage[]}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onDuplicate={handleDuplicate}
+        />
+      </div>
       
       <MessageFormDialog
         open={showDialog}

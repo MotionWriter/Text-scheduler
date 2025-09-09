@@ -23,7 +23,7 @@
     --secondary-foreground: 240 6% 15%;
 
     /* Muted and Accent using your Sea tones */
-    --muted: 200 14% 90%;           /* Sea Salt (softened) */
+    --muted: 200 14% 96%;           /* Sea Salt (brightened) */
     --muted-foreground: 240 4% 40%;
     --accent: 180 20% 77%;          /* Sea Glass */
     --accent-foreground: 240 5% 25%;
@@ -34,11 +34,20 @@
     --driftwood: 31 33% 78%;        /* #D8C6B5 */
 
     /* Table header color (Alabaster) */
-    --table-header: 42 35% 96%;
+    --table-header: 42 35% 98%;
 
-    /* Feedback colors keep defaults for now */
+    /* Feedback colors */
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
+    /* Semantic status tokens for badges, alerts, etc. */
+    --success: 140 35% 85%;
+    --success-foreground: 140 30% 25%;
+    --warning: 42 90% 92%;
+    --warning-foreground: 42 35% 28%;
+    --error: 0 85% 90%;
+    --error-foreground: 0 60% 30%;
+    --info: 200 40% 92%;
+    --info-foreground: 200 35% 30%;
 
     /* UI chrome */
     --border: 40 15% 86%;
@@ -64,14 +73,22 @@
     --primary-foreground: 0 0% 100%;
     --secondary: 55 6% 61%;
     --secondary-foreground: 240 6% 15%;
-    --muted: 60 12% 92%;
+    --muted: 200 14% 96%;
     --muted-foreground: 240 4% 40%;
-    --accent: 55 10% 88%;
+    --accent: 55 10% 92%;
     --accent-foreground: 240 5% 25%;
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 240 10% 85%;
-    --input: 240 10% 85%;
+    --success: 140 35% 85%;
+    --success-foreground: 140 30% 25%;
+    --warning: 42 90% 92%;
+    --warning-foreground: 42 35% 28%;
+    --error: 0 85% 90%;
+    --error-foreground: 0 60% 30%;
+    --info: 200 40% 92%;
+    --info-foreground: 200 35% 30%;
+    --border: 240 10% 88%;
+    --input: 240 10% 88%;
     --ring: 240 3% 31%;
   }
 }
@@ -150,6 +167,11 @@
   .card-body { @apply p-6; }
   .card-header { @apply p-6 pb-2; }
   .card-footer { @apply p-6 pt-2; }
+
+  /* Mobile card utility for ≤ sm breakpoints */
+  .mobile-card {
+    @apply bg-white rounded-lg border border-border shadow-sm p-4 sm:p-6;
+  }
 
   /* Section typography */
   .section-title { @apply text-2xl font-bold text-foreground; }
