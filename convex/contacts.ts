@@ -2,6 +2,12 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
+function normalizeUsDigits(value: string) {
+  let d = String(value).replace(/\D/g, "");
+  if (d.length === 11 && d.startsWith("1")) d = d.slice(1);
+  return d;
+}
+
 export const list = query({
   args: {},
   handler: async (ctx) => {
@@ -30,10 +36,15 @@ export const create = mutation({
       throw new Error("Not authenticated");
     }
 
+    const normalized = normalizeUsDigits(args.phoneNumber);
+    if (normalized.length !== 10) {
+      throw new Error("Invalid US phone number (expect 10 digits; +1 prefix accepted)");
+    }
+
     return await ctx.db.insert("contacts", {
       userId,
       name: args.name,
-      phoneNumber: args.phoneNumber,
+      phoneNumber: normalized,
       email: args.email,
       notes: args.notes,
     });
@@ -59,9 +70,14 @@ export const update = mutation({
       throw new Error("Contact not found or access denied");
     }
 
+    const normalized = normalizeUsDigits(args.phoneNumber);
+    if (normalized.length !== 10) {
+      throw new Error("Invalid US phone number (expect 10 digits; +1 prefix accepted)");
+    }
+
     await ctx.db.patch(args.id, {
       name: args.name,
-      phoneNumber: args.phoneNumber,
+      phoneNumber: normalized,
       email: args.email,
       notes: args.notes,
     });
