@@ -29,14 +29,14 @@ export function GroupsTab() {
   );
 
   const colors = [
-    { name: "Blue", value: "#3B82F6" },
-    { name: "Green", value: "#10B981" },
-    { name: "Purple", value: "#8B5CF6" },
-    { name: "Pink", value: "#EC4899" },
-    { name: "Yellow", value: "#F59E0B" },
-    { name: "Red", value: "#EF4444" },
-    { name: "Indigo", value: "#6366F1" },
-    { name: "Gray", value: "#6B7280" },
+    { name: "Primary", value: "#4F4F51" },
+    { name: "Secondary", value: "#A1A094" },
+    { name: "Sea Salt", value: "#A8B8C0" },
+    { name: "Sea Glass", value: "#B9D2D2" },
+    { name: "Driftwood", value: "#D8C6B5" },
+    { name: "Slate", value: "#6B7280" },
+    { name: "Olive", value: "#7C8A55" },
+    { name: "Maroon", value: "#8B4F4F" },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {

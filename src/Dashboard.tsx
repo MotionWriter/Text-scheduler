@@ -63,13 +63,13 @@ export function Dashboard() {
                   setActiveTab("lessons");
                 }
               }}
-              className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                testMode ? "bg-blue-600" : "bg-gray-200"
+              className={`relative inline-flex items-center h-6 rounded-full w-12 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 border ${
+                testMode ? "bg-primary text-white border-primary" : "bg-[hsl(var(--table-header))] border-border"
               }`}
             >
               <span
-                className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${
-                  testMode ? "translate-x-6" : "translate-x-1"
+                className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform shadow ${
+                  testMode ? "translate-x-7" : "translate-x-1"
                 }`}
               />
             </button>

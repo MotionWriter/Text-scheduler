@@ -213,8 +213,8 @@ export function MessagesDataTable<TData, TValue>({
 
       {/* Table */}
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
+        <Table className="bg-white">
+          <TableHeader className="bg-[hsl(var(--table-header))]">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {

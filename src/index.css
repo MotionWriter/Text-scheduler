@@ -5,8 +5,8 @@
 @layer base {
   :root {
     /* Design tokens tuned to requested palette (no dark mode) */
-    /* Page background: Alabaster #F1EDE4 (lightened toward white) */
-    --background: 42 35% 96%;
+    /* Page background: now pure white */
+    --background: 0 0% 100%;
     /* Foreground uses the dark tone #4F4F51 */
     --foreground: 240 3% 31%;
 
@@ -33,6 +33,9 @@
     --sea-glass: 180 20% 77%;       /* #B9D2D2 */
     --driftwood: 31 33% 78%;        /* #D8C6B5 */
 
+    /* Table header color (Alabaster) */
+    --table-header: 42 35% 96%;
+
     /* Feedback colors keep defaults for now */
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
@@ -51,7 +54,7 @@
 
   /* Dark class is intentionally mapped to light tokens (no dark theme) */
   .dark {
-    --background: 42 35% 96%;
+    --background: 0 0% 100%;
     --foreground: 240 3% 31%;
     --card: 0 0% 100%;
     --card-foreground: 240 3% 31%;
