@@ -12,8 +12,8 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
-          // Legacy fallback
-          hover: "#1d4ed8",
+          // Fallback hover close to #4F4F51
+          hover: "#3d3d3f",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
