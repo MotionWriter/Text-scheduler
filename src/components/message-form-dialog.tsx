@@ -188,10 +188,10 @@ export function MessageFormDialog({
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="studyBook">Study Book *</Label>
                   {studyBooks.length === 1 ? (
-                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="alert-info">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-blue-900">{studyBooks[0].title}</span>
-                            <span className="text-sm text-blue-700">({studyBooks[0].description})</span>
+                            <span className="font-medium">{studyBooks[0].title}</span>
+                            <span className="text-sm text-muted-foreground">({studyBooks[0].description})</span>
                           </div>
                         </div>
                       ) : (
@@ -289,25 +289,9 @@ export function MessageFormDialog({
                     )}
 
                     {formData.lessonId && customMessageQuota && (
-                      <div className={`p-4 rounded-lg border ${
-                        customMessageQuota.canCreate 
-                          ? "bg-green-50 border-green-200" 
-                          : "bg-orange-50 border-orange-200"
-                      }`}>
-                        <div className="flex items-start gap-3">
-                          <div className={`font-medium text-sm ${
-                            customMessageQuota.canCreate 
-                              ? "text-green-900" 
-                              : "text-orange-900"
-                          }`}>
-                            Custom Message Quota
-                          </div>
-                        </div>
-                        <div className={`text-sm mt-1 ${
-                          customMessageQuota.canCreate 
-                            ? "text-green-700" 
-                            : "text-orange-700"
-                        }`}>
+                      <div className={customMessageQuota.canCreate ? "alert-info" : "alert-warning"}>
+                        <div className="font-medium text-sm">Custom Message Quota</div>
+                        <div className="text-sm mt-1">
                           {customMessageQuota.canCreate ? (
                             `You can create ${customMessageQuota.remaining} more custom message${customMessageQuota.remaining !== 1 ? 's' : ''} for this lesson.`
                           ) : (
