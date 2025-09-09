@@ -19,13 +19,6 @@ export function StudyBookBrowser({ studyBooks, onSelectStudyBook }: StudyBookBro
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-xl sm:text-2xl font-semibold text-foreground">Available Study Books</h3>
-          <p className="text-sm sm:text-base text-muted-foreground">Choose a study book to begin your journey</p>
-        </div>
-      </div>
-      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {activeBooks.length === 0 ? (
           <div className="col-span-full bg-white p-8 rounded-lg border shadow-sm text-center text-gray-500">
@@ -66,7 +59,6 @@ export function StudyBookBrowser({ studyBooks, onSelectStudyBook }: StudyBookBro
           ))
         )}
       </div>
-      
     </div>
   );
 }
