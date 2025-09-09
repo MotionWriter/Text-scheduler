@@ -7,9 +7,16 @@ import { Button } from "./ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
+function normalizeUsDigits(value: string) {
+  let d = value.replace(/\D/g, "");
+  if (d.length === 11 && d.startsWith("1")) d = d.slice(1);
+  return d;
+}
+
 function formatPhone(value: string | undefined | null) {
   if (!value) return "";
-  const digits = String(value).replace(/\D/g, "").slice(0, 10);
+  let digits = normalizeUsDigits(String(value));
+  digits = digits.slice(0, 10);
   const len = digits.length;
   if (len <= 3) return digits;
   if (len <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`;

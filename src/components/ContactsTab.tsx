@@ -7,9 +7,16 @@ import { Button } from "./ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
+function normalizeUsDigits(value: string) {
+  let d = value.replace(/\D/g, "");
+  if (d.length === 11 && d.startsWith("1")) d = d.slice(1);
+  return d;
+}
+
 function formatPhone(value: string | undefined | null) {
   if (!value) return "";
-  const digits = String(value).replace(/\D/g, "").slice(0, 10);
+  let digits = normalizeUsDigits(String(value));
+  digits = digits.slice(0, 10);
   const len = digits.length;
   if (len <= 3) return digits;
   if (len <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
@@ -206,7 +213,12 @@ export function ContactsTab() {
           continue;
         }
         // Optional light phone normalization: strip spaces
-        const cleanedPhone = phoneNumber.replace(/\D+/g, "");
+        const cleaned = normalizeUsDigits(phoneNumber);
+        if (cleaned.length !== 10) {
+          invalids.push({ row: r + 1, reason: "Invalid US phone (expect 10 digits, accepts +1 prefix)" });
+          continue;
+        }
+        const cleanedPhone = cleaned;
         valids.push({
           name,
           phoneNumber: cleanedPhone,
@@ -247,7 +259,7 @@ export function ContactsTab() {
       try {
         await createContact({
           name: c.name,
-          phoneNumber: c.phoneNumber.replace(/\D/g, ""),
+          phoneNumber: c.phoneNumber,
           email: c.email || undefined,
           notes: c.notes || undefined,
         });
