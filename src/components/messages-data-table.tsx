@@ -156,12 +156,12 @@ export function MessagesDataTable<TData, TValue>({
             onChange={(event) =>
               table.getColumn("message")?.setFilterValue(event.target.value)
             }
-            className="pl-10"
+            className="pl-10 soft-control"
           />
         </div>
         
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[160px] soft-control">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -174,7 +174,7 @@ export function MessagesDataTable<TData, TValue>({
 
 
         <Select value={groupByFilter} onValueChange={setGroupByFilter}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[160px] soft-control">
             <SelectValue placeholder="Group by" />
           </SelectTrigger>
           <SelectContent>
@@ -185,7 +185,7 @@ export function MessagesDataTable<TData, TValue>({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2 soft-control">
               Columns <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>

@@ -161,6 +161,10 @@
   .badge { @apply inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border; }
   .badge-neutral { @apply badge; background-color: hsl(var(--muted)); color: hsl(var(--muted-foreground)); border-color: hsl(var(--border)); }
   .badge-primary { @apply badge; background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground)); border-color: hsl(var(--primary)); }
+
+  /* Soft control surface (off-white pill) */
+  .soft-control { @apply bg-card border border-border rounded-xl shadow-sm; }
+  .soft-control:focus { box-shadow: 0 0 0 3px hsl(var(--ring) / 0.15); outline: none; }
 }
 
 .accent-text {
