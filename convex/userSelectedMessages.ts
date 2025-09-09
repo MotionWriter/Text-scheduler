@@ -201,7 +201,7 @@ export const updateScheduling = mutation({
       throw new Error("Selection not found or access denied");
     }
 
-    // Update schedule on the selection
+    // Simple scheduling update; no group fan-out here (handled at call site if desired)
     await ctx.db.patch(args.id, {
       scheduledAt: args.scheduledAt,
       isScheduled: args.isScheduled,
@@ -211,51 +211,5 @@ export const updateScheduling = mutation({
       lastDeliveryAttempt: undefined,
       deliveryError: undefined,
     });
-
-    // If scheduling is set and a lesson->group mapping exists, fan out to group members
-    if (args.isScheduled && args.scheduledAt) {
-      const pref = await ctx.db
-        .query("lessonGroupPreferences")
-        .withIndex("by_user_lesson", q => q.eq("userId", user._id).eq("lessonId", selection.lessonId))
-        .first();
-
-      if (pref) {
-        // Determine message content
-        let content = "";
-        if (selection.predefinedMessageId) {
-          const pm = await ctx.db.get(selection.predefinedMessageId);
-          content = (pm as any)?.content || "";
-        } else if (selection.customMessageId) {
-          const cm = await ctx.db.get(selection.customMessageId);
-          content = (cm as any)?.content || "";
-        }
-
-        // Get group members
-        const memberships = await ctx.db
-          .query("groupMemberships")
-          .withIndex("by_group", q => q.eq("groupId", pref.groupId))
-          .collect();
-
-        for (const m of memberships) {
-          await ctx.db.insert("scheduledMessages", {
-            userId: user._id,
-            contactId: m.contactId,
-            groupId: pref.groupId,
-            templateId: undefined,
-            message: content,
-            scheduledFor: args.scheduledAt,
-            status: "pending",
-            notes: undefined,
-            category: "study",
-          });
-        }
-
-        // Prevent duplicate send via userSelectedMessages cron path
-        await ctx.db.patch(args.id, {
-          deliveryStatus: "cancelled",
-          deliveryError: undefined,
-        });
-      }
-    }
   },
 });

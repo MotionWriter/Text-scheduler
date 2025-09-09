@@ -35,6 +35,7 @@ export function MessageSelector({ lessonId, lessonTitle, onBack }: MessageSelect
   const removeSelectedMessage = useMutation(api.userSelectedMessages.remove);
   const updateScheduling = useMutation(api.userSelectedMessages.updateScheduling);
   const setLessonGroup = useMutation(api.lessonGroupPrefs.setForLesson);
+  const createGroupMessages = useMutation(api.scheduledMessages.createForGroup);
 
   const canCreateCustomMessage = customMessageCountData.canCreate;
   const characterCount = customMessageContent.length;
@@ -118,8 +119,25 @@ export function MessageSelector({ lessonId, lessonTitle, onBack }: MessageSelect
 
   const handleScheduleMessage = async (id: Id<"userSelectedMessages">, scheduledAt: number) => {
     try {
-      await updateScheduling({ id, isScheduled: true, scheduledAt });
-      toast.success("Message scheduled successfully");
+      // Find the selection to know type and content
+      const sel: any = (selectedMessages as any[]).find((s) => String(s._id) === String(id));
+      const isPredefined = sel?.messageType === 'predefined';
+      const prefGroupId = (groupPref as any)?.groupId as Id<'groups'> | undefined;
+
+      if (isPredefined && prefGroupId && sel?.messageContent) {
+        // Default to group scheduling for predefined messages when a lesson group is set
+        await createGroupMessages({
+          groupId: prefGroupId,
+          message: sel.messageContent,
+          scheduledFor: scheduledAt,
+          category: 'study',
+        } as any);
+        toast.success("Scheduled to group");
+        // Do not set userSelectedMessages scheduling to avoid duplicate sends
+      } else {
+        await updateScheduling({ id, isScheduled: true, scheduledAt });
+        toast.success("Message scheduled successfully");
+      }
     } catch (error) {
       toast.error("Failed to update message scheduling");
     }
