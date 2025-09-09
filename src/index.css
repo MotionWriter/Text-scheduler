@@ -5,8 +5,8 @@
 @layer base {
   :root {
     /* Design tokens tuned to requested palette (no dark mode) */
-    /* Off-white background that pairs with provided grays (#F7F7F4 approx) */
-    --background: 60 14% 96%;
+    /* Page background: Alabaster #F1EDE4 */
+    --background: 42 33% 93%;
     /* Foreground uses the dark tone #4F4F51 */
     --foreground: 240 3% 31%;
 
@@ -22,11 +22,16 @@
     --secondary: 55 6% 61%;        /* #A1A094 */
     --secondary-foreground: 240 6% 15%;
 
-    /* Muted and Accent = lighter neutrals harmonized with palette */
-    --muted: 60 12% 92%;           /* subtle panels */
+    /* Muted and Accent using your Sea tones */
+    --muted: 200 14% 90%;           /* Sea Salt (softened) */
     --muted-foreground: 240 4% 40%;
-    --accent: 55 10% 88%;
+    --accent: 180 20% 77%;          /* Sea Glass */
     --accent-foreground: 240 5% 25%;
+
+    /* Additional accents (for selective use) */
+    --sea-salt: 200 14% 71%;        /* #A8B8C0 */
+    --sea-glass: 180 20% 77%;       /* #B9D2D2 */
+    --driftwood: 31 33% 78%;        /* #D8C6B5 */
 
     /* Feedback colors keep defaults for now */
     --destructive: 0 72% 55%;
@@ -46,7 +51,7 @@
 
   /* Dark class is intentionally mapped to light tokens (no dark theme) */
   .dark {
-    --background: 60 14% 96%;
+    --background: 42 33% 93%;
     --foreground: 240 3% 31%;
     --card: 0 0% 100%;
     --card-foreground: 240 3% 31%;
@@ -98,6 +103,7 @@
   /* Primary blues -> theme primary */
   .bg-blue-600 { background-color: hsl(var(--primary)) !important; }
   .hover\:bg-blue-700:hover { background-color: hsl(var(--primary) / 0.92) !important; }
+  .focus\:ring-blue-500:focus { box-shadow: 0 0 0 3px hsl(var(--primary) / 0.25) !important; }
   .text-blue-600 { color: hsl(var(--primary)) !important; }
   .text-blue-800 { color: hsl(var(--primary)) !important; }
   .border-blue-500 { border-color: hsl(var(--primary)) !important; }
@@ -109,6 +115,42 @@
   .text-gray-900 { color: hsl(var(--foreground)) !important; }
   .text-gray-600, .text-gray-500 { color: hsl(var(--muted-foreground)) !important; }
   .border-gray-200 { border-color: hsl(var(--border)) !important; }
+}
+
+/* Component primitives */
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 min-h-[44px] font-semibold text-white bg-primary shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  .btn:hover { background-color: hsl(var(--primary) / 0.92); }
+  .btn-secondary {
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--secondary));
+  }
+  .btn-secondary:hover { filter: brightness(0.95); }
+  .btn-ghost {
+    color: hsl(var(--primary));
+    background-color: transparent;
+    border: 1px solid hsl(var(--border));
+  }
+  .btn-ghost:hover { background-color: hsl(var(--accent)); }
+  .btn-danger { @apply text-white; background-color: hsl(var(--destructive)); }
+  .btn-danger:hover { filter: saturate(1.1) brightness(0.95); }
+
+  /* Cards / Panels */
+  .card {
+    @apply bg-card text-foreground rounded-xl border border-border shadow-sm;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .card-body { @apply p-6; }
+  .card-header { @apply p-6 pb-2; }
+  .card-footer { @apply p-6 pt-2; }
+
+  /* Section typography */
+  .section-title { @apply text-2xl font-bold text-foreground; }
+  .section-subtitle { @apply text-sm text-muted-foreground; }
 }
 
 .accent-text {

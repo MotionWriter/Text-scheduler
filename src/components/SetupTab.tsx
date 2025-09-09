@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
+import { Button } from "../components/ui/button";
 
 export function SetupTab() {
   const user = useQuery(api.auth.loggedInUser);
@@ -164,12 +165,9 @@ export function SetupTab() {
               Download the Message Scheduler shortcut to your iPhone. This shortcut will allow you 
               to send your scheduled messages directly from your phone.
             </p>
-            <button
-              onClick={downloadShortcut}
-              className="hidden md:inline-flex items-center justify-center bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold min-h-[44px]"
-            >
+            <Button onClick={downloadShortcut} className="hidden md:inline-flex px-8 min-h-[44px]">
               Download Shortcut File
-            </button>
+            </Button>
             <p className="text-sm text-gray-500">
               After downloading, open the file on your iPhone to install the shortcut
             </p>
@@ -196,13 +194,9 @@ export function SetupTab() {
               </div>
             )}
 
-            <button
-              onClick={handleCreateApiKey}
-              disabled={isCreatingApiKey}
-              className="hidden md:inline-flex items-center justify-center bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 min-h-[44px]"
-            >
+            <Button onClick={handleCreateApiKey} disabled={isCreatingApiKey} className="hidden md:inline-flex px-8 min-h-[44px]">
               {isCreatingApiKey ? "Creating..." : "Create API Key"}
-            </button>
+            </Button>
           </div>
         )}
 
@@ -227,12 +221,9 @@ export function SetupTab() {
                 <code className="bg-white px-3 py-2 rounded border flex-1 font-mono text-sm break-all">
                   {apiKey}
                 </code>
-                <button
-                  onClick={() => copyToClipboard(apiKey)}
-                  className="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition-colors whitespace-nowrap w-full sm:w-auto min-h-[44px]"
-                >
+                <Button variant="secondary" onClick={() => copyToClipboard(apiKey)} className="w-full sm:w-auto">
                   Copy
-                </button>
+                </Button>
               </div>
               
               <div className="space-y-3 text-sm text-green-800">
@@ -247,12 +238,9 @@ export function SetupTab() {
             </div>
 
             <div className="text-center">
-              <button
-                onClick={() => setCurrentStep(4)}
-                className="hidden md:inline-flex items-center justify-center bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold min-h-[44px]"
-              >
+              <Button onClick={() => setCurrentStep(4)} className="hidden md:inline-flex px-8 min-h-[44px]">
                 Continue to Test
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -359,14 +347,13 @@ function MobileStickyCtas({
           </button>
         )}
         {primary && (
-          <button
-            type="button"
+          <Button
             onClick={primary.onClick}
             disabled={primary.disabled}
-            className="flex-[2] bg-blue-600 disabled:opacity-60 text-white rounded-lg px-4 py-3 min-h-[44px] font-semibold"
+            className="flex-[2]"
           >
             {primary.label}
-          </button>
+          </Button>
         )}
       </div>
     </div>
