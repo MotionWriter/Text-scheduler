@@ -48,6 +48,7 @@ export type ScheduledMessage = {
   studyBook?: any
   aggregated?: boolean
   messageIds?: string[]
+  customMessageId?: Id<"userCustomMessages">
 }
 
 interface MessageColumnsProps {
@@ -503,6 +504,10 @@ export const createMessageColumns = ({
     cell: ({ row }) => {
       const message = row.original
 
+      const canEdit = message.status === "pending" && !message.aggregated
+      const canDelete = message.status === "pending" || message.status === "failed"
+      const canDuplicate = !!onDuplicate && !message.aggregated && message.status !== "sent"
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -512,30 +517,30 @@ export const createMessageColumns = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {/* Allow Edit for pending, non-aggregated messages only */}
-            {message.status === "pending" && !message.aggregated && (
+            {canEdit && (
               <>
-                <DropdownMenuItem onClick={() => onEdit(message)}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit
+                <DropdownMenuItem className="flex items-center gap-2" onClick={() => onEdit(message)}>
+                  <Edit className="h-4 w-4" />
+                  <span className="leading-none">Edit</span>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
+                {(canDelete || canDuplicate) && <DropdownMenuSeparator />}
               </>
             )}
-            {/* Allow Delete for pending or failed messages, including aggregated group rows */}
-            {(message.status === "pending" || message.status === "failed") && (
+
+            {canDelete && (
               <>
-                <DropdownMenuItem onClick={() => onDelete(message)}>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
+                <DropdownMenuItem className="flex items-center gap-2" onClick={() => onDelete(message)}>
+                  <Trash2 className="h-4 w-4" />
+                  <span className="leading-none">Delete</span>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
+                {canDuplicate && <DropdownMenuSeparator />}
               </>
             )}
-            {onDuplicate && !message.aggregated && (
-              <DropdownMenuItem onClick={() => onDuplicate(message)}>
-                <Copy className="mr-2 h-4 w-4" />
-                Duplicate
+
+            {canDuplicate && (
+              <DropdownMenuItem className="flex items-center gap-2" onClick={() => onDuplicate!(message)}>
+                <Copy className="h-4 w-4" />
+                <span className="leading-none">Duplicate</span>
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>

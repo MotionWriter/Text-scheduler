@@ -150,6 +150,7 @@ export const listAll = query({
         messageSource,
         lesson,
         studyBook,
+        customMessageId: selection.customMessageId, // Include for editing custom messages
       };
     })
   );

@@ -14,6 +14,7 @@ export function MessagesTab() {
   const isAdmin = user?.isAdmin || false;
   const createMessage = useMutation(api.scheduledMessages.create);
   const updateMessage = useMutation(api.scheduledMessages.update);
+  const updateCustomMessage = useMutation(api.userCustomMessages.update);
   const createForGroup = useMutation(api.scheduledMessages.createForGroup);
   const removeMessage = useMutation(api.scheduledMessages.remove);
   const removeManyMessages = useMutation(api.scheduledMessages.removeMany);
@@ -132,13 +133,27 @@ export function MessagesTab() {
     patch: Partial<Pick<ScheduledMessage, "message" | "scheduledFor" | "notes">>
   ) => {
     try {
-      await updateMessage({
-        id: row._id,
-        message: patch.message ?? row.message,
-        scheduledFor: patch.scheduledFor ?? row.scheduledFor,
-        notes: patch.notes ?? row.notes,
-      })
-      toast.success("Scheduled message updated")
+      if (row.source === "study" && row.messageSource === "custom" && row.customMessageId) {
+        // For custom study messages, update the userCustomMessages content
+        if (patch.message !== undefined) {
+          await updateCustomMessage({
+            id: row.customMessageId,
+            content: patch.message
+          })
+          toast.success("Custom study message updated")
+        }
+        // Note: For scheduling changes on study messages, we'd need to update userSelectedMessages
+        // but that's more complex and not implemented yet
+      } else {
+        // For manual messages, use the existing logic
+        await updateMessage({
+          id: row._id,
+          message: patch.message ?? row.message,
+          scheduledFor: patch.scheduledFor ?? row.scheduledFor,
+          notes: patch.notes ?? row.notes,
+        })
+        toast.success("Scheduled message updated")
+      }
     } catch (error) {
       toast.error("Failed to update scheduled message")
       throw error
