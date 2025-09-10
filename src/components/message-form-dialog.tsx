@@ -57,6 +57,8 @@ export function MessageFormDialog({
   const contacts = useQuery(api.contacts.list) || []
   const groups = useQuery(api.groups.list) || []
   const studyBooks = useQuery(api.studyBooks.list) || []
+  const user = useQuery(api.auth.loggedInUser)
+  const isAdmin = user?.isAdmin || false
   
   const [messageType, setMessageType] = useState<"individual" | "group" | "custom">("custom")
   const [scheduledDate, setScheduledDate] = useState<string>("")
@@ -70,7 +72,7 @@ export function MessageFormDialog({
     scheduledFor: "",
     notes: "",
     messageType: "custom",
-    sendMode: "individual",
+    sendMode: "group",
   })
   
   const lessons = useQuery(
@@ -88,7 +90,10 @@ export function MessageFormDialog({
   const msInDay = 24 * 60 * 60 * 1000
   const minDate = selectedLesson?.activeWeekStart ? selectedLesson.activeWeekStart - 4 * msInDay : undefined
   const maxDate = selectedLesson?.activeWeekStart ? selectedLesson.activeWeekStart + 6 * msInDay : undefined
-  const defaultTimeForLesson = (selectedLesson?.defaultSendTime as string) || "09:00"
+  const DEFAULT_FIXED_TIME = "06:30"
+  const defaultTimeForLesson = isAdmin
+    ? ((selectedLesson?.defaultSendTime as string) || DEFAULT_FIXED_TIME)
+    : DEFAULT_FIXED_TIME
 
   // If creating a custom message and a lesson is chosen, initialize date/time to the lesson defaults
   useEffect(() => {
@@ -142,11 +147,19 @@ export function MessageFormDialog({
         scheduledFor: "",
         notes: "",
         messageType: "custom",
-        sendMode: "individual",
+        sendMode: "group",
       })
       setMessageType("custom")
     }
   }, [open, message])
+
+  // Auto-select the only available group when creating a new message
+  useEffect(() => {
+    if (!open || !!message) return
+    if (groups.length === 1 && !formData.groupId) {
+      setFormData(prev => ({ ...prev, groupId: groups[0]._id as any }))
+    }
+  }, [open, message, groups, formData.groupId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -161,7 +174,7 @@ export function MessageFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl md:max-h-[90vh] overflow-visible">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto md:overflow-visible">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Edit Scheduled Message" : "Schedule New Message"}
@@ -236,34 +249,7 @@ export function MessageFormDialog({
                       </div>
                     )}
 
-                    {/* Send To selection (Individual vs Group) */}
-                    {formData.lessonId && (
-                      <div className="space-y-2 md:col-span-2">
-                        <Label>Send To</Label>
-                        <div className="flex items-center gap-6">
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="radio"
-                              name="sendMode"
-                              value="individual"
-                              checked={(formData.sendMode || "individual") === "individual"}
-                              onChange={() => setFormData(prev => ({ ...prev, sendMode: "individual" }))}
-                            />
-                            <span>Individuals (each member)</span>
-                          </label>
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="radio"
-                              name="sendMode"
-                              value="group"
-                              checked={formData.sendMode === "group"}
-                              onChange={() => setFormData(prev => ({ ...prev, sendMode: "group" }))}
-                            />
-                            <span>Group Message</span>
-                          </label>
-                        </div>
-                      </div>
-                    )}
+                    {/* Send To selection removed for now; defaulting to group mode */}
 
                     {/* Group selection - always required for delivery context */}
                     {formData.lessonId && (
@@ -335,7 +321,7 @@ export function MessageFormDialog({
                   />
                 )}
                 <Select
-                  disabled={messageType === "custom" && !selectedLesson}
+                  disabled={!isAdmin || (messageType === "custom" && !selectedLesson)}
                   value={scheduledTime || (messageType === "custom" ? defaultTimeForLesson : scheduledTime)}
                   onValueChange={(v) => {
                     setScheduledTime(v)
@@ -361,17 +347,6 @@ export function MessageFormDialog({
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-            
-            
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Input
-                type="text"
-                value={formData.notes}
-                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="Optional notes"
-              />
             </div>
           </div>
           

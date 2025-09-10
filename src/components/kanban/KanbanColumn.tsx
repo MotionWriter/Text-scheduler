@@ -12,6 +12,7 @@ interface KanbanColumnProps {
   lessonsById: Record<string, any>
   editingStates: Record<string, boolean>
   editData: Record<string, ScheduleEditData>
+  hasGroupSelected: boolean
   onStartEdit: (card: KanbanCardType) => void
   onSaveEdit: (card: KanbanCardType) => void
   onCancelEdit: (card: KanbanCardType) => void
@@ -39,6 +40,7 @@ export function KanbanColumn({
   lessonsById,
   editingStates,
   editData,
+  hasGroupSelected,
   onStartEdit,
   onSaveEdit,
   onCancelEdit,
@@ -86,6 +88,7 @@ export function KanbanColumn({
                   dateRange={getDateRangeForLesson(lesson)}
                   isEditing={card.selectionId ? editingStates[card.selectionId] || false : false}
                   editData={card.selectionId ? editData[card.selectionId] : undefined}
+                  hasGroupSelected={hasGroupSelected}
                   onStartEdit={onStartEdit}
                   onSaveEdit={onSaveEdit}
                   onCancelEdit={onCancelEdit}

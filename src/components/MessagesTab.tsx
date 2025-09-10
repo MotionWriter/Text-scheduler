@@ -10,6 +10,8 @@ import { MessagesMobileList } from "./messages-mobile-list";
 
 export function MessagesTab() {
   const messages = useQuery(api.allScheduledMessages.listAll) || [];
+  const user = useQuery(api.auth.loggedInUser);
+  const isAdmin = user?.isAdmin || false;
   const createMessage = useMutation(api.scheduledMessages.create);
   const updateMessage = useMutation(api.scheduledMessages.update);
   const createForGroup = useMutation(api.scheduledMessages.createForGroup);
@@ -75,11 +77,7 @@ export function MessagesTab() {
           scheduledFor: new Date(formData.scheduledFor).getTime(),
           notes: formData.notes || undefined,
         });
-        toast.success(
-          (formData.sendMode === "group")
-            ? "Scheduled message to group (per member)"
-            : "Messages scheduled for all group members"
-        );
+        toast.success("Scheduled message to group");
       } else if (formData.messageType === "group") {
         // Legacy fallback path
         await createForGroup({
@@ -130,6 +128,7 @@ export function MessagesTab() {
     onDelete: handleDelete,
     onDuplicate: handleDuplicate,
     onUpdate: handleInlineUpdate,
+    isAdmin,
   });
 
   return (

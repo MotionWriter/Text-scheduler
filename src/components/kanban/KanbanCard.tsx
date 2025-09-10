@@ -13,6 +13,7 @@ interface KanbanCardProps {
   dateRange: DateRange
   isEditing: boolean
   editData?: ScheduleEditData
+  hasGroupSelected: boolean
   onStartEdit: (card: KanbanCardType) => void
   onSaveEdit: (card: KanbanCardType) => void
   onCancelEdit: (card: KanbanCardType) => void
@@ -30,6 +31,7 @@ export function KanbanCard({
   dateRange,
   isEditing,
   editData,
+  hasGroupSelected,
   onStartEdit,
   onSaveEdit,
   onCancelEdit,
@@ -53,14 +55,6 @@ export function KanbanCard({
     opacity: isDragging ? 0.5 : 1,
   }
 
-  const generateTimeOptions = () => {
-    return Array.from({ length: 96 }).map((_, idx) => {
-      const h = String(Math.floor(idx / 4)).padStart(2, '0')
-      const m = String((idx % 4) * 15).padStart(2, '0')
-      const val = `${h}:${m}`
-      return <option key={val} value={val}>{val}</option>
-    })
-  }
 
   const formatScheduledTime = (timestamp?: number) => {
     if (!timestamp) return ""
@@ -83,9 +77,17 @@ export function KanbanCard({
       {/* Top-right action */}
       {card.type === 'available' && onQuickSchedule && (
         <button
-          className="absolute top-2 right-2 p-1 rounded bg-green-100 text-green-700 hover:bg-green-200"
-          onClick={(e) => { e.stopPropagation(); onQuickSchedule(card) }}
-          title="Schedule"
+          className={`absolute top-2 right-2 p-1 rounded transition-colors ${
+            hasGroupSelected 
+              ? "bg-green-100 text-green-700 hover:bg-green-200 cursor-pointer" 
+              : "bg-gray-100 text-gray-400 cursor-not-allowed"
+          }`}
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            if (hasGroupSelected) onQuickSchedule(card) 
+          }}
+          title={hasGroupSelected ? "Schedule" : "Please select a group first"}
+          disabled={!hasGroupSelected}
         >
           <Check className="h-4 w-4" />
         </button>
@@ -145,13 +147,9 @@ export function KanbanCard({
                   minDate={dateRange.min}
                   maxDate={dateRange.max}
                 />
-                <select
-                  value={editData?.time || lessonDefaultTime}
-                  onChange={(e) => onUpdateEditData(card.selectionId as string, { time: e.target.value })}
-                  className="px-2 py-1 border rounded text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  {generateTimeOptions()}
-                </select>
+                <span className="text-xs text-gray-600">
+                  at {lessonDefaultTime}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <button

@@ -74,7 +74,7 @@ export function StudyBookManager({ studyBooks, onSelectStudyBook }: StudyBookMan
       <div className="flex justify-end">
         <button
           onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:opacity-90 transition-colors"
         >
           Add Study Book
         </button>
@@ -88,7 +88,7 @@ export function StudyBookManager({ studyBooks, onSelectStudyBook }: StudyBookMan
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 Title *
               </label>
               <input
@@ -96,12 +96,12 @@ export function StudyBookManager({ studyBooks, onSelectStudyBook }: StudyBookMan
                 required
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="e.g., Men's Study: Wild at Heart"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 Description *
               </label>
               <textarea
@@ -109,12 +109,12 @@ export function StudyBookManager({ studyBooks, onSelectStudyBook }: StudyBookMan
                 rows={3}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="Brief description of the study book..."
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 Total Lessons *
               </label>
               <input
@@ -124,20 +124,20 @@ export function StudyBookManager({ studyBooks, onSelectStudyBook }: StudyBookMan
                 max="52"
                 value={formData.totalLessons}
                 onChange={(e) => setFormData({ ...formData, totalLessons: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:opacity-90 transition-colors"
               >
                 {editingBook ? "Update" : "Create"}
               </button>
               <button
                 type="button"
                 onClick={resetForm}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
+                className="bg-muted text-foreground px-4 py-2 rounded-md hover:opacity-90 transition-colors"
               >
                 Cancel
               </button>
@@ -156,28 +156,28 @@ export function StudyBookManager({ studyBooks, onSelectStudyBook }: StudyBookMan
           studyBooks.map((book) => (
             <div key={book._id} className="bg-white p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-3">
-                <h3 className="text-lg font-semibold text-gray-900">{book.title}</h3>
+                <h3 className="text-lg font-semibold text-foreground">{book.title}</h3>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleEdit(book)}
-                    className="text-blue-600 hover:text-blue-900 text-sm"
+                    className="text-primary hover:opacity-90 text-sm"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(book._id)}
-                    className="text-red-600 hover:text-red-900 text-sm"
+                    className="text-[hsl(var(--destructive))] hover:opacity-90 text-sm"
                   >
                     Delete
                   </button>
                 </div>
               </div>
-              <p className="text-gray-600 text-sm mb-4 line-clamp-2">{book.description}</p>
+              <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{book.description}</p>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">{book.totalLessons} lessons</span>
+                <span className="text-sm text-muted-foreground">{book.totalLessons} lessons</span>
                 <button
                   onClick={() => onSelectStudyBook(book._id)}
-                  className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
+                  className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm hover:opacity-90 transition-colors"
                 >
                   Manage Lessons
                 </button>

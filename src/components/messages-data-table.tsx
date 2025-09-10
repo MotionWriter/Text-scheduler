@@ -220,7 +220,7 @@ export function MessagesDataTable<TData, TValue>({
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     return (
-                      <TableHead key={header.id}>
+                      <TableHead key={header.id} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -236,7 +236,7 @@ export function MessagesDataTable<TData, TValue>({
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <TableCell colSpan={columns.length} className="px-6 py-4 h-24 text-center">
                     Loading...
                   </TableCell>
                 </TableRow>
@@ -246,7 +246,7 @@ export function MessagesDataTable<TData, TValue>({
                     // Group header row
                     return (
                       <TableRow key={row.id} className="bg-gradient-to-r from-slate-50 to-gray-50 border-y border-slate-200/60 font-medium shadow-sm">
-                        <TableCell colSpan={columns.length} className="py-3">
+                        <TableCell colSpan={columns.length} className="px-6 py-3">
                           <button
                             onClick={() => row.getToggleExpandedHandler()()}
                             className="flex items-center gap-3 text-left hover:text-blue-600 transition-colors group w-full"
@@ -277,7 +277,7 @@ export function MessagesDataTable<TData, TValue>({
                       data-state={row.getIsSelected() && "selected"}
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
+                        <TableCell key={cell.id} className="px-6 py-4 whitespace-nowrap text-sm">
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext()
@@ -289,7 +289,7 @@ export function MessagesDataTable<TData, TValue>({
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <TableCell colSpan={columns.length} className="px-6 py-4 h-24 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <p className="text-muted-foreground">No scheduled messages found.</p>
                       <Button variant="outline" onClick={onNewMessage} className="gap-2">

@@ -20,22 +20,24 @@ export function LessonContentTab() {
   return (
     <div className="space-y-6">
       {/* Header with breadcrumb navigation */}
-      <div className="flex justify-between items-center">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-bold text-gray-900">Lesson Content Management</h2>
-          <nav className="flex space-x-2 text-sm text-gray-600">
-            <button 
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+        <div className="space-y-1 min-w-0">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground break-words">
+            Lesson Content Management
+          </h2>
+          <nav className="flex flex-wrap items-center gap-1 text-xs sm:text-sm">
+            <button
               onClick={() => setActiveView("books")}
-              className={`hover:text-blue-600 ${activeView === "books" ? "font-medium text-blue-600" : ""}`}
+              className={`${activeView === "books" ? "font-medium text-primary" : "text-muted-foreground hover:text-primary"}`}
             >
               Study Books
             </button>
             {selectedStudyBook && (
               <>
-                <span>/</span>
-                <button 
+                <span className="text-muted-foreground">/</span>
+                <button
                   onClick={() => setActiveView("lessons")}
-                  className={`hover:text-blue-600 ${activeView === "lessons" ? "font-medium text-blue-600" : ""}`}
+                  className={`${activeView === "lessons" ? "font-medium text-primary" : "text-muted-foreground hover:text-primary"}`}
                 >
                   Lessons
                 </button>
@@ -43,10 +45,10 @@ export function LessonContentTab() {
             )}
             {selectedLesson && (
               <>
-                <span>/</span>
-                <button 
+                <span className="text-muted-foreground">/</span>
+                <button
                   onClick={() => setActiveView("messages")}
-                  className={`hover:text-blue-600 ${activeView === "messages" ? "font-medium text-blue-600" : ""}`}
+                  className={`${activeView === "messages" ? "font-medium text-primary" : "text-muted-foreground hover:text-primary"}`}
                 >
                   Messages
                 </button>
@@ -58,7 +60,7 @@ export function LessonContentTab() {
 
       {/* Content based on active view */}
       {activeView === "books" && (
-        <StudyBookManager 
+        <StudyBookManager
           studyBooks={studyBooks}
           onSelectStudyBook={(id) => {
             setSelectedStudyBook(id);
@@ -68,7 +70,7 @@ export function LessonContentTab() {
       )}
 
       {activeView === "lessons" && selectedStudyBook && (
-        <LessonManager 
+        <LessonManager
           studyBookId={selectedStudyBook}
           lessons={lessons}
           onSelectLesson={(id) => {
@@ -80,7 +82,7 @@ export function LessonContentTab() {
       )}
 
       {activeView === "messages" && selectedLesson && (
-        <PredefinedMessageManager 
+        <PredefinedMessageManager
           lessonId={selectedLesson}
           onBack={() => setActiveView("lessons")}
         />

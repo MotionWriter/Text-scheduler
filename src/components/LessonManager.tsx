@@ -11,6 +11,8 @@ interface LessonManagerProps {
   onBack: () => void;
 }
 
+import { LessonCsvImportButton } from "./LessonCsvImportModal";
+
 export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: LessonManagerProps) {
   const createLesson = useMutation(api.lessons.create);
   const updateLesson = useMutation(api.lessons.update);
@@ -68,31 +70,36 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
   return (
     <div className="space-y-6">
       {/* Back button and actions */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <button
           onClick={onBack}
-          className="text-primary hover:opacity-90"
+          className="text-primary hover:opacity-90 text-sm sm:text-base self-start"
         >
           ← Back to Study Books
         </button>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:opacity-90 transition-colors"
-        >
-          Add Lesson
-        </button>
+        <div className="flex items-stretch sm:items-center gap-2 flex-wrap sm:flex-nowrap w-full sm:w-auto">
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:opacity-90 transition-colors text-sm w-full sm:w-auto"
+          >
+            Add Lesson
+          </button>
+          <div className="w-full sm:w-auto">
+            <LessonCsvImportButton studyBookId={studyBookId} />
+          </div>
+        </div>
       </div>
 
       {/* Lesson Form - Similar to template form */}
       {showForm && (
         <div className="bg-white p-6 rounded-lg border shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">
+          <h3 className="text-base sm:text-lg font-semibold mb-4">
             {editingLesson ? "Edit Lesson" : "Add New Lesson"}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-<label className="block text-sm font-medium text-foreground mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   Lesson Number *
                 </label>
                 <input
@@ -101,7 +108,7 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
                   min="1"
                   value={formData.lessonNumber}
                   onChange={(e) => setFormData({ ...formData, lessonNumber: parseInt(e.target.value) })}
-className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   disabled={!!editingLesson} // Can't change lesson number when editing
                 />
               </div>
@@ -131,54 +138,54 @@ className="w-full px-3 py-2 border border-border rounded-md focus:outline-none f
                 placeholder="Brief description of the lesson..."
               />
             </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-1">
-                        Active Week Start (optional)
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.activeWeekStart}
-                        onChange={(e) => setFormData({ ...formData, activeWeekStart: e.target.value })}
-                        className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">Pick the Monday (or desired start) of the active week.</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-1">
-                        Default Send Time (optional)
-                      </label>
-                      <select
-                        value={formData.defaultSendTime}
-                        onChange={(e) => setFormData({ ...formData, defaultSendTime: e.target.value })}
-                        className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      >
-                        {Array.from({ length: 96 }).map((_, idx) => {
-                          const h = String(Math.floor(idx / 4)).padStart(2, '0')
-                          const m = String((idx % 4) * 15).padStart(2, '0')
-                          const val = `${h}:${m}`
-                          return <option key={val} value={val}>{val}</option>
-                        })}
-                      </select>
-                      <p className="text-xs text-muted-foreground mt-1">Used as the default time when users schedule messages.</p>
-                    </div>
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Active Week Start (optional)
+                </label>
+                <input
+                  type="date"
+                  value={formData.activeWeekStart}
+                  onChange={(e) => setFormData({ ...formData, activeWeekStart: e.target.value })}
+                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Pick the Monday (or desired start) of the active week.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Default Send Time (optional)
+                </label>
+                <select
+                  value={formData.defaultSendTime}
+                  onChange={(e) => setFormData({ ...formData, defaultSendTime: e.target.value })}
+                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  {Array.from({ length: 96 }).map((_, idx) => {
+                    const h = String(Math.floor(idx / 4)).padStart(2, '0')
+                    const m = String((idx % 4) * 15).padStart(2, '0')
+                    const val = `${h}:${m}`
+                    return <option key={val} value={val}>{val}</option>
+                  })}
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">Used as the default time when users schedule messages.</p>
+              </div>
+            </div>
 
-                  <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:opacity-90 transition-colors"
-                  >
-                    {editingLesson ? "Update" : "Create"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="bg-muted text-foreground px-4 py-2 rounded-md hover:opacity-90 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                type="submit"
+                className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:opacity-90 transition-colors text-sm sm:text-base"
+              >
+                {editingLesson ? "Update" : "Create"}
+              </button>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="bg-muted text-foreground px-4 py-2 rounded-md hover:opacity-90 transition-colors text-sm sm:text-base"
+              >
+                Cancel
+              </button>
+            </div>
           </form>
         </div>
       )}
@@ -189,22 +196,26 @@ className="w-full px-3 py-2 border border-border rounded-md focus:outline-none f
           .sort((a, b) => a.lessonNumber - b.lessonNumber)
           .map((lesson) => (
             <div key={lesson._id} className="bg-white p-4 rounded-lg border shadow-sm">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <span className="bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] text-xs px-2 py-1 rounded-full">
                       Lesson {lesson.lessonNumber}
                     </span>
-                    <h3 className="text-lg font-semibold text-foreground">{lesson.title}</h3>
+                    <h3 className="text-base sm:text-lg font-semibold text-foreground break-words">
+                      {lesson.title}
+                    </h3>
                   </div>
                   {lesson.description && (
-                    <p className="text-muted-foreground text-sm">{lesson.description}</p>
+                    <p className="text-muted-foreground text-sm whitespace-pre-wrap break-words">
+                      {lesson.description}
+                    </p>
                   )}
                 </div>
-                <div className="flex gap-2 ml-4">
+                <div className="flex gap-2 sm:ml-4 flex-wrap w-full sm:w-auto">
                   <button
                     onClick={() => onSelectLesson(lesson._id)}
-className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm hover:opacity-90 transition-colors"
+                    className="bg-primary text-primary-foreground px-3 py-2 rounded text-sm hover:opacity-90 transition-colors w-full sm:w-auto"
                   >
                     Manage Messages
                   </button>
@@ -220,7 +231,7 @@ className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm hover:op
                       });
                       setShowForm(true);
                     }}
-className="text-primary hover:opacity-90 text-sm"
+                    className="text-primary hover:opacity-90 text-sm w-full sm:w-auto"
                   >
                     Edit
                   </button>
@@ -235,7 +246,7 @@ className="text-primary hover:opacity-90 text-sm"
                         }
                       }
                     }}
-className="text-[hsl(var(--destructive))] hover:opacity-90 text-sm"
+                    className="text-[hsl(var(--destructive))] hover:opacity-90 text-sm w-full sm:w-auto"
                   >
                     Delete
                   </button>
@@ -243,7 +254,7 @@ className="text-[hsl(var(--destructive))] hover:opacity-90 text-sm"
               </div>
             </div>
           ))}
-        
+
         {lessons.length === 0 && (
           <div className="bg-white p-8 rounded-lg border shadow-sm text-center text-muted-foreground">
             No lessons yet. Add your first lesson to get started.

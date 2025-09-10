@@ -21,13 +21,15 @@ import { KanbanCard as KanbanCardType, ColumnId, ScheduleEditData, DateRange } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 interface KanbanBoardProps {
   studyBookId: Id<"studyBooks">
   studyBookTitle: string
+  hasGroupSelected: boolean
 }
 
-export function KanbanBoard({ studyBookId, studyBookTitle }: KanbanBoardProps) {
+export function KanbanBoard({ studyBookId, studyBookTitle, hasGroupSelected }: KanbanBoardProps) {
   const lessons = useQuery(api.lessons.listByStudyBook, { studyBookId }) || []
   const messages = useQuery(api.allMessagesForStudyBook.listByStudyBook, { studyBookId }) || []
   const selections = useQuery(api.userSelectedMessages.getForStudyBook, { studyBookId }) || []
@@ -193,6 +195,11 @@ export function KanbanBoard({ studyBookId, studyBookTitle }: KanbanBoardProps) {
         }
       } else if (targetColumn === 'scheduled') {
         if (sourceColumn === 'available') {
+          if (!hasGroupSelected) {
+            alert('Please select a group before scheduling messages.')
+            return
+          }
+          
           // Select and schedule at default time
           const lesson = lessonById[activeCard.lessonId]
           const ts = defaultScheduleForLesson(lesson)
@@ -216,24 +223,21 @@ export function KanbanBoard({ studyBookId, studyBookTitle }: KanbanBoardProps) {
     
     const lesson = lessonById[card.lessonId]
     let dateStr: string
-    let timeStr: string
     
     if (card.scheduledAt) {
       const d = new Date(card.scheduledAt)
       const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
       dateStr = local.toISOString().slice(0, 10)
-      timeStr = local.toISOString().slice(11, 16)
     } else {
       const ts = defaultScheduleForLesson(lesson)
       const d = new Date(ts)
       const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
       dateStr = local.toISOString().slice(0, 10)
-      timeStr = local.toISOString().slice(11, 16)
     }
     
     setEditData(prev => ({
       ...prev,
-      [card.selectionId as string]: { date: dateStr, time: timeStr }
+      [card.selectionId as string]: { date: dateStr, time: lesson?.defaultSendTime || "09:00" }
     }))
     setEditingStates(prev => ({
       ...prev,
@@ -245,11 +249,13 @@ export function KanbanBoard({ studyBookId, studyBookTitle }: KanbanBoardProps) {
     if (!card.selectionId) return
     
     const data = editData[card.selectionId]
-    if (!data?.date || !data?.time) return
+    if (!data?.date) return
     
     const lesson = lessonById[card.lessonId]
     const dateRange = getDateRangeForLesson(lesson)
-    const ts = combineLocalTs(data.date, data.time)
+    // Always use lesson's default time
+    const lessonTime = lesson?.defaultSendTime || "09:00"
+    const ts = combineLocalTs(data.date, lessonTime)
     
     if ((dateRange.min && ts < dateRange.min) || (dateRange.max && ts > dateRange.max)) {
       // Out of range; show error or do nothing for now
@@ -294,11 +300,28 @@ export function KanbanBoard({ studyBookId, studyBookTitle }: KanbanBoardProps) {
 
   return (
     <div className="space-y-4">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="text-sm text-blue-800">
-          <strong>How to use:</strong> Drag messages from <strong>Available</strong> directly into <strong>Scheduled</strong> to schedule at the lesson's default time. Drag back to <strong>Available</strong> to remove.
-          Click "Edit" on scheduled messages to adjust the timing within the allowed window.
-        </div>
+      <div className="flex justify-end">
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              aria-label="How to use"
+              className="inline-flex items-center justify-center w-7 h-7 rounded-full border text-xs font-semibold bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] border-[hsl(var(--accent))] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring"
+              title="How to use"
+            >
+              i
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="max-w-lg text-sm">
+            <div className="text-foreground">
+              <p>
+                <strong>How to use:</strong> Drag messages from <strong>Available</strong> directly into <strong>Scheduled</strong> to schedule at the lesson's default time. Drag back to <strong>Available</strong> to remove.
+              </p>
+              <p className="mt-2">
+                Click <strong>Edit</strong> on a scheduled message to change the date. The time always stays at the lesson's default time.
+              </p>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Lesson heading */}
@@ -329,7 +352,7 @@ export function KanbanBoard({ studyBookId, studyBookTitle }: KanbanBoardProps) {
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600">Lesson</span>
           <Select value={lessonFilter} onValueChange={(v) => setLessonFilter(v)}>
-            <SelectTrigger className="w-[240px]">
+            <SelectTrigger className="w-[240px] bg-white">
               <SelectValue placeholder="All lessons" />
             </SelectTrigger>
             <SelectContent>
@@ -344,7 +367,7 @@ export function KanbanBoard({ studyBookId, studyBookTitle }: KanbanBoardProps) {
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600">Show</span>
           <Select value={showFilter} onValueChange={(v: 'all'|'available'|'scheduled') => setShowFilter(v)}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] bg-white">
               <SelectValue placeholder="All" />
             </SelectTrigger>
             <SelectContent>
@@ -356,7 +379,7 @@ export function KanbanBoard({ studyBookId, studyBookTitle }: KanbanBoardProps) {
         </div>
 
         <div className="flex-1 min-w-[240px]">
-          <Input
+          <Input className="bg-white"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search messages..."
@@ -365,6 +388,7 @@ export function KanbanBoard({ studyBookId, studyBookTitle }: KanbanBoardProps) {
         <div>
           <Button
             variant="outline"
+            className="bg-white"
             onClick={() => { setLessonFilter('all'); setShowFilter('all'); setQuery(''); }}
           >
             Clear filters
@@ -389,12 +413,18 @@ export function KanbanBoard({ studyBookId, studyBookTitle }: KanbanBoardProps) {
               lessonsById={lessonById}
               editingStates={editingStates}
               editData={editData}
+              hasGroupSelected={hasGroupSelected}
               onStartEdit={handleStartEdit}
               onSaveEdit={handleSaveEdit}
               onCancelEdit={handleCancelEdit}
               onUpdateEditData={handleUpdateEditData}
               getDateRangeForLesson={getDateRangeForLesson}
               onQuickSchedule={async (card) => {
+                if (!hasGroupSelected) {
+                  alert('Please select a group before scheduling messages.')
+                  return
+                }
+                
                 const lesson = lessonById[card.lessonId]
                 const ts = defaultScheduleForLesson(lesson)
                 

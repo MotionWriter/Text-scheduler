@@ -28,6 +28,8 @@ export function MessageSelector({ lessonId, lessonTitle, onBack }: MessageSelect
   const studyGroupPref = useQuery(api.studyGroupPrefs.getForStudy, {
     studyBookId: (lesson as any)?.studyBookId ?? undefined,
   });
+  const user = useQuery(api.auth.loggedInUser);
+  const isAdmin = user?.isAdmin || false;
 
   // Mutations
   const createCustomMessage = useMutation(api.userCustomMessages.create);
@@ -124,19 +126,25 @@ export function MessageSelector({ lessonId, lessonTitle, onBack }: MessageSelect
     try {
       // Find the selection to know type and content
       const sel: any = (selectedMessages as any[]).find((s) => String(s._id) === String(id));
-      const isPredefined = sel?.messageType === 'predefined';
       const prefGroupId = ((groupPref as any)?.groupId || (studyGroupPref as any)?.groupId) as Id<'groups'> | undefined;
 
-      if (isPredefined && prefGroupId && sel?.messageContent) {
-        // Default to group scheduling for predefined messages when a lesson group is set
+      // Resolve message content regardless of selection type
+      let messageText: string | undefined = sel?.messageContent;
+      if (!messageText && sel?.customMessageId) {
+        const cm = (userCustomMessages as any[]).find((m) => String(m._id) === String(sel.customMessageId));
+        messageText = cm?.content;
+      }
+
+      if (prefGroupId && messageText) {
+        // Default to group scheduling whenever a lesson/study group is set
         await createGroupMessages({
           groupId: prefGroupId,
-          message: sel.messageContent,
+          message: messageText,
           scheduledFor: scheduledAt,
           category: 'study',
         } as any);
         toast.success("Scheduled to group");
-        // Do not set userSelectedMessages scheduling to avoid duplicate sends
+        // Avoid duplicating by not persisting per-selection schedule
       } else {
         await updateScheduling({ id, isScheduled: true, scheduledAt });
         toast.success("Message scheduled successfully");
@@ -175,7 +183,7 @@ export function MessageSelector({ lessonId, lessonTitle, onBack }: MessageSelect
 
   // Allowed dates utility
   const msInDay = 24 * 60 * 60 * 1000;
-  const defaultTime = (lesson?.defaultSendTime as string) || "09:00";
+  const defaultTime = isAdmin ? ((lesson?.defaultSendTime as string) || "06:30") : "06:30";
   const activeStart = typeof lesson?.activeWeekStart === 'number' ? lesson!.activeWeekStart : undefined;
   // Allowed window: Thu–Sun of prior week, then Mon–Sun of active week
   const minDate = activeStart ? activeStart - 4 * msInDay : undefined // Thursday prior
@@ -528,18 +536,24 @@ export function MessageSelector({ lessonId, lessonTitle, onBack }: MessageSelect
                               />
                             )}
 
-                            <select
-                              value={scheduleDrafts[selected._id]?.time || defaultTime}
-                              onChange={(e) => setScheduleDrafts(prev => ({ ...prev, [selected._id]: { ...(prev[selected._id] || { date: allowedDates[0]?.value || "" }), time: e.target.value } }))}
-                              className="px-2 py-1 border rounded text-sm"
-                            >
-                              {Array.from({ length: 96 }).map((_, idx) => {
-                                const h = String(Math.floor(idx / 4)).padStart(2, '0');
-                                const m = String((idx % 4) * 15).padStart(2, '0');
-                                const val = `${h}:${m}`;
-                                return <option key={val} value={val}>{val}</option>;
-                              })}
-                            </select>
+                            {isAdmin ? (
+                              <select
+                                value={scheduleDrafts[selected._id]?.time || defaultTime}
+                                onChange={(e) => setScheduleDrafts(prev => ({ ...prev, [selected._id]: { ...(prev[selected._id] || { date: allowedDates[0]?.value || "" }), time: e.target.value } }))}
+                                className="px-2 py-1 border rounded text-sm"
+                              >
+                                {Array.from({ length: 96 }).map((_, idx) => {
+                                  const h = String(Math.floor(idx / 4)).padStart(2, '0');
+                                  const m = String((idx % 4) * 15).padStart(2, '0');
+                                  const val = `${h}:${m}`;
+                                  return <option key={val} value={val}>{val}</option>;
+                                })}
+                              </select>
+                            ) : (
+                              <div className="px-3 py-1 border rounded text-sm bg-gray-50 text-gray-700 select-none">
+                                {defaultTime}
+                              </div>
+                            )}
 
                             <button
                               onClick={() => {

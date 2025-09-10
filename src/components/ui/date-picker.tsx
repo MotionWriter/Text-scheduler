@@ -33,6 +33,7 @@ export function DatePickerPopover({
   buttonClassName?: string
 }) {
   const [open, setOpen] = React.useState(false)
+  const containerRef = React.useRef<HTMLDivElement>(null)
   const initial = value ? new Date(`${value}T00:00`) : new Date()
   const [viewYear, setViewYear] = React.useState(initial.getFullYear())
   const [viewMonth, setViewMonth] = React.useState(initial.getMonth()) // 0-11
@@ -44,6 +45,20 @@ export function DatePickerPopover({
       setViewMonth(d.getMonth())
     }
   }, [value])
+
+  // Close on click outside
+  React.useEffect(() => {
+    if (!open) return
+    
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false)
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [open])
 
   const firstDayOfMonth = new Date(viewYear, viewMonth, 1)
   const startWeekday = firstDayOfMonth.getDay() // 0-6, Sun=0
@@ -104,12 +119,12 @@ export function DatePickerPopover({
   const weekdays = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
 
   return (
-    <div className="relative inline-block">
+    <div ref={containerRef} className="relative inline-block">
       <button type="button" className={buttonClassName} onClick={() => setOpen(o => !o)}>
         {value ? new Date(`${value}T00:00`).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : 'Select date'}
       </button>
       {open && (
-        <div className="absolute z-50 mt-2 w-[16rem] rounded-md border bg-white shadow-lg p-2">
+        <div className="absolute z-[9999] mt-2 w-[16rem] rounded-md border bg-white shadow-xl p-2 left-0 top-full">
           <div className="flex items-center justify-between mb-2">
             <button type="button" disabled={!canGoPrev} onClick={goPrevMonth} className={["px-2 py-1 text-sm rounded", !canGoPrev ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"].join(" ")}>‹</button>
             <div className="text-sm font-medium">

@@ -44,6 +44,14 @@ export const listAll = query({
         .filter((p): p is string => typeof p === 'string' && p.length > 0)
         .join(',');
 
+      // Derive a single aggregated status for the group
+      // Priority: any failed -> failed; else if all sent -> sent; else pending
+      let aggregatedStatus: "pending" | "sent" | "failed" = "pending";
+      const anyFailed = rows.some(r => r.status === "failed");
+      const allSent = rows.every(r => r.status === "sent");
+      if (anyFailed) aggregatedStatus = "failed";
+      else if (allSent) aggregatedStatus = "sent";
+
       return {
         _id: rows[0]._id, // representative id for UI row (non-editable)
         _creationTime: rows[0]._creationTime,
@@ -53,7 +61,7 @@ export const listAll = query({
         templateId: sample.templateId,
         message: sample.message,
         scheduledFor: sample.scheduledFor,
-        status: sample.status,
+        status: aggregatedStatus,
         sentAt: undefined,
         notes: undefined,
         category: sample.category,

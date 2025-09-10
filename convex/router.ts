@@ -138,9 +138,19 @@ http.route({
   path: "/api/messages/sent",
   method: "POST",
   handler: httpAction(async (ctx, request) => {
+    const requestTimestamp = new Date().toISOString();
     const apiKey = request.headers.get("Authorization")?.replace("Bearer ", "");
     
+    // Log the incoming request
+    console.log(`[${requestTimestamp}] POST /api/messages/sent - Request received`);
+    console.log(`[${requestTimestamp}] Headers:`, {
+      authorization: apiKey ? `Bearer ${apiKey.substring(0, 8)}...` : 'missing',
+      contentType: request.headers.get("Content-Type"),
+      userAgent: request.headers.get("User-Agent"),
+    });
+    
     if (!apiKey) {
+      console.log(`[${requestTimestamp}] ERROR: Missing API key`);
       return new Response(JSON.stringify({ error: "API key required" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
@@ -149,9 +159,19 @@ http.route({
 
     try {
       const body = await request.json();
+      console.log(`[${requestTimestamp}] Request body:`, JSON.stringify(body, null, 2));
       const { messageId, messageIds, sentAt } = body as any;
 
+      // Log parsed parameters
+      console.log(`[${requestTimestamp}] Parsed parameters:`, {
+        messageId: messageId || 'not provided',
+        messageIds: messageIds ? `array of ${messageIds.length} items` : 'not provided',
+        sentAt: sentAt,
+        sentAtType: typeof sentAt
+      });
+
       if ((!messageId && !messageIds) || !sentAt) {
+        console.log(`[${requestTimestamp}] ERROR: Missing required parameters`);
         return new Response(JSON.stringify({ error: "messageId or messageIds and sentAt are required" }), {
           status: 400,
           headers: { "Content-Type": "application/json" },
@@ -162,7 +182,13 @@ http.route({
       let parsedSentAt: number;
       try {
         parsedSentAt = parseTimestamp(sentAt);
+        console.log(`[${requestTimestamp}] Timestamp parsing successful:`, {
+          original: sentAt,
+          parsed: parsedSentAt,
+          parsedIso: new Date(parsedSentAt).toISOString()
+        });
       } catch (error) {
+        console.log(`[${requestTimestamp}] ERROR: Timestamp parsing failed:`, error);
         return new Response(JSON.stringify({ error: `Invalid sentAt format: ${error}` }), {
           status: 400,
           headers: { "Content-Type": "application/json" },
@@ -171,31 +197,41 @@ http.route({
 
       const userId = await ctx.runQuery(internal.apiAuth.validateApiKey, { apiKey });
       if (!userId) {
+        console.log(`[${requestTimestamp}] ERROR: Invalid API key`);
         return new Response(JSON.stringify({ error: "Invalid API key" }), {
           status: 401,
           headers: { "Content-Type": "application/json" },
         });
       }
 
+      console.log(`[${requestTimestamp}] API key validation successful, userId:`, userId);
+
       if (Array.isArray(messageIds)) {
+        console.log(`[${requestTimestamp}] Marking ${messageIds.length} messages as sent for user ${userId}`);
         await ctx.runMutation(internal.api.markMessagesAsSent, {
           userId,
           messageIds,
           sentAt: parsedSentAt,
         });
+        console.log(`[${requestTimestamp}] Successfully marked ${messageIds.length} messages as sent`);
       } else {
+        console.log(`[${requestTimestamp}] Marking single message ${messageId} as sent for user ${userId}`);
         await ctx.runMutation(internal.api.markMessageAsSent, {
           userId,
           messageId,
           sentAt: parsedSentAt,
         });
+        console.log(`[${requestTimestamp}] Successfully marked message ${messageId} as sent`);
       }
 
+      console.log(`[${requestTimestamp}] POST /api/messages/sent - Request completed successfully`);
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
     } catch (error) {
+      console.log(`[${requestTimestamp}] ERROR: Internal server error:`, error);
+      console.log(`[${requestTimestamp}] Error stack:`, (error as Error).stack);
       return new Response(JSON.stringify({ error: "Internal server error" }), {
         status: 500,
         headers: { "Content-Type": "application/json" },

@@ -4,8 +4,22 @@ import { SignInForm } from "./SignInForm";
 import { SignOutButton } from "./SignOutButton";
 import { Toaster } from "sonner";
 import { Dashboard } from "./Dashboard";
+import { PasswordReset } from "./components/PasswordReset";
 
 export default function App() {
+  // Check if this is the password reset page
+  const isPasswordReset = window.location.pathname === '/reset-password' || 
+                          window.location.search.includes('token=');
+
+  if (isPasswordReset) {
+    return (
+      <div>
+        <PasswordReset />
+        <Toaster />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm h-16 flex justify-between items-center border-b shadow-sm px-4">

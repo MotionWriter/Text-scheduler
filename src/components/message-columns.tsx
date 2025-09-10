@@ -322,7 +322,8 @@ export const createMessageColumns = ({
   onDelete,
   onDuplicate,
   onUpdate,
-}: MessageColumnsProps): ColumnDef<ScheduledMessage>[] => [
+  isAdmin,
+}: MessageColumnsProps & { isAdmin?: boolean }): ColumnDef<ScheduledMessage>[] => [
   {
     accessorKey: "recipient",
     header: "Recipient",
@@ -400,7 +401,7 @@ export const createMessageColumns = ({
     header: "Scheduled For",
     cell: ({ row }) => {
       const m = row.original
-      const disabled = m.aggregated || m.status !== "pending"
+      const disabled = !isAdmin || m.aggregated || m.status !== "pending"
       return (
         <EditableDateTimeCell
           ts={m.scheduledFor}

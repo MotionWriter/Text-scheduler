@@ -32,6 +32,9 @@ export function GroupsTab() {
   const addMember = useMutation(api.groups.addMember);
   const removeMember = useMutation(api.groups.removeMember);
 
+  // Editing state for members panel
+  const [isEditingMembers, setIsEditingMembers] = useState(false);
+
   const [showForm, setShowForm] = useState(false);
   const [editingGroup, setEditingGroup] = useState<Id<"groups"> | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<Id<"groups"> | null>(null);
@@ -136,6 +139,58 @@ export function GroupsTab() {
     !groupWithMembers?.members.some(member => member?._id === contact._id)
   );
 
+  const addMembersSection = (() => {
+    if (!isEditingMembers) {
+      return (
+        <div className="text-sm text-gray-500">
+          Tap Edit &rarr; Edit Members on a group card to add or remove members.
+        </div>
+      );
+    }
+    if (availableContacts.length === 0) {
+      return (
+        <div className="text-sm text-gray-500">
+          All contacts are already members of this group.
+        </div>
+      );
+    }
+    return (
+      <div>
+        <h4 className="font-medium text-gray-900 mb-3">Add Members</h4>
+        <div className="space-y-2">
+          {availableContacts.map((contact) => (
+            <div
+              key={contact._id}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+            >
+              <div>
+                <p className="font-medium text-gray-900">{contact.name}</p>
+                <p className="text-sm text-gray-500">{formatPhone(contact.phoneNumber)}</p>
+              </div>
+              <div className="hidden md:block">
+                <button
+                  onClick={() => handleAddMember(contact._id)}
+                  className="text-blue-600 hover:text-blue-900 text-sm"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="md:hidden">
+                <button
+                  onClick={() => handleAddMember(contact._id)}
+                  aria-label="Add member"
+                  className="text-green-600 hover:text-green-700 text-2xl font-bold px-2 py-1 min-h-[44px]"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  })();
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -235,7 +290,7 @@ export function GroupsTab() {
                         ? "border-blue-500 bg-blue-50"
                         : "border-gray-200 hover:border-gray-300"
                     }`}
-                    onClick={() => setSelectedGroup(group._id)}
+                    onClick={() => { setSelectedGroup(group._id); setIsEditingMembers(false); }}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -250,43 +305,32 @@ export function GroupsTab() {
                           </p>
                         </div>
                       </div>
-                      <div className="hidden md:flex gap-2">
+                      <div className="flex gap-2">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEdit(group);
-                          }}
-                          className="text-blue-600 hover:text-blue-900 text-sm"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(group._id);
-                          }}
+                          onClick={(e) => { e.stopPropagation(); handleDelete(group._id); }}
                           className="text-red-600 hover:text-red-900 text-sm"
                         >
                           Delete
                         </button>
                       </div>
-                      <div className="md:hidden">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="icon" className="h-10 w-10 min-h-[44px]">
-                              <MoreHorizontal className="h-5 w-5" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-40">
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(group); }}>Edit</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(group._id); }}>Delete</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
                     </div>
                     {group.description && (
                       <p className="text-sm text-gray-600 mt-2">{group.description}</p>
                     )}
+                    {/* Inline Edit actions */}
+                    <div className="mt-3">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
+                            Edit
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-40">
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(group); }}>Edit Info</DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedGroup(group._id); setIsEditingMembers(true); document.getElementById('group-members-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>Edit Members</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -295,11 +339,19 @@ export function GroupsTab() {
         </div>
 
         {/* Group Members */}
-        <div className="bg-white rounded-lg border shadow-sm">
-          <div className="p-4 border-b">
+        <div id="group-members-panel" className="bg-white rounded-lg border shadow-sm">
+          <div className="p-4 border-b flex items-center justify-between">
             <h3 className="text-lg font-semibold">
               {selectedGroup ? "Group Members" : "Select a Group"}
             </h3>
+            {selectedGroup && isEditingMembers && (
+              <button
+                onClick={() => setIsEditingMembers(false)}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                Done
+              </button>
+            )}
           </div>
           <div className="p-4">
             {!selectedGroup ? (
@@ -330,26 +382,26 @@ export function GroupsTab() {
                             <p className="font-medium text-gray-900">{member?.name}</p>
                             <p className="text-sm text-gray-500">{formatPhone(member?.phoneNumber)}</p>
                           </div>
-                          <div className="hidden md:block">
-                            <button
-                              onClick={() => handleRemoveMember(member!._id)}
-                              className="text-red-600 hover:text-red-900 text-sm"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                          <div className="md:hidden">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="icon" className="h-10 w-10 min-h-[44px]">
-                                  <MoreHorizontal className="h-5 w-5" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-36">
-                                <DropdownMenuItem className="text-destructive" onClick={() => handleRemoveMember(member!._id)}>Remove</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
+                          {isEditingMembers && (
+                            <>
+                              <div className="hidden md:block">
+                                <button
+                                  onClick={() => handleRemoveMember(member!._id)}
+                                  className="text-red-600 hover:text-red-900 text-sm"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                              <div className="md:hidden">
+                                <button
+                                  onClick={() => handleRemoveMember(member!._id)}
+                                  className="text-red-600 hover:text-red-900 text-sm font-medium"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -357,46 +409,7 @@ export function GroupsTab() {
                 </div>
 
                 {/* Add Members */}
-                {availableContacts.length > 0 && (
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-3">
-                      Add Members
-                    </h4>
-                    <div className="space-y-2">
-                      {availableContacts.map((contact) => (
-                        <div
-                          key={contact._id}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                        >
-                          <div>
-                            <p className="font-medium text-gray-900">{contact.name}</p>
-                            <p className="text-sm text-gray-500">{formatPhone(contact.phoneNumber)}</p>
-                          </div>
-                          <div className="hidden md:block">
-                            <button
-                              onClick={() => handleAddMember(contact._id)}
-                              className="text-blue-600 hover:text-blue-900 text-sm"
-                            >
-                              Add
-                            </button>
-                          </div>
-                          <div className="md:hidden">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="icon" className="h-10 w-10 min-h-[44px]">
-                                  <MoreHorizontal className="h-5 w-5" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-36">
-                                <DropdownMenuItem onClick={() => handleAddMember(contact._id)}>Add</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {addMembersSection}
               </div>
             )}
           </div>

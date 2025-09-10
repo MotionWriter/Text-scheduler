@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { ContactsTab } from "./components/ContactsTab";
@@ -11,30 +11,40 @@ import { DeliveryNotifications } from "./components/DeliveryNotifications";
 import { MessagesTab } from "./components/MessagesTab";
 import { ApiKeysTab } from "./components/ApiKeysTab";
 import { SetupTab } from "./components/SetupTab";
+import { ChevronsUpDown } from "lucide-react";
 
 type Tab = "messages" | "contacts" | "groups" | "templates" | "study-messages" | "lessons" | "delivery" | "api-keys";
 
 export function Dashboard() {
-  const [activeTab, setActiveTab] = useState<Tab>("messages");
+  // Priority: Study Messages
+  const [activeTab, setActiveTab] = useState<Tab>("study-messages");
   const [testMode, setTestMode] = useState(false);
   const user = useQuery(api.auth.loggedInUser);
   const verificationStatus = useQuery(api.userVerification.checkVerificationStatus);
   const isAdmin = user?.isAdmin || false;
   const isVerified = verificationStatus?.isVerified || false;
 
+  // Build tabs in the requested priority order
   const tabs = [
-    { id: "messages" as const, label: "Scheduled Messages", icon: "📅" },
-    { id: "contacts" as const, label: "Contacts", icon: "👥" },
+    ...((!isAdmin || testMode) ? [
+      { id: "study-messages" as const, label: "Study Messages", icon: "📖" },
+    ] : []),
     { id: "groups" as const, label: "Groups", icon: "👨‍👩‍👧‍👦" },
+    { id: "contacts" as const, label: "Contacts", icon: "👥" },
+    { id: "messages" as const, label: "Scheduled Messages", icon: "📅" },
     ...(isAdmin && !testMode ? [
       { id: "lessons" as const, label: "Lesson Content", icon: "📚" },
       { id: "delivery" as const, label: "Message Delivery", icon: "📨" },
     ] : []),
-    ...((!isAdmin || testMode) ? [
-      { id: "study-messages" as const, label: "Study Messages", icon: "📖" },
-    ] : []),
     ...(isAdmin ? [{ id: "api-keys" as const, label: "API Keys", icon: "🔑" }] : []),
   ];
+
+  // Ensure activeTab is valid and defaults to first available
+  useEffect(() => {
+    if (tabs.length > 0 && !tabs.some(t => t.id === activeTab)) {
+      setActiveTab(tabs[0].id);
+    }
+  }, [JSON.stringify(tabs), activeTab]);
 
   // Dev E2E bypass: allow skipping Setup when ?e2e=1 is present (for automated tests)
   const devE2EBypass = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("e2e") === "1";
@@ -82,13 +92,13 @@ export function Dashboard() {
       </div>
 
       {/* Tabs */}
-      <div className="rounded-xl border bg-muted p-1 shadow-sm">
+      <div className="rounded-xl bg-muted shadow-sm p-0 sm:border sm:p-1">
         {/* Mobile compact tab selector */}
         <div className="sm:hidden mb-2">
-          <div className="max-w-full">
+          <div className="max-w-full relative rounded-2xl border border-border/60 bg-white/60 shadow-sm p-1">
             <select
               aria-label="Select tab"
-              className="w-full h-10 rounded-md border border-input bg-white px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-full h-12 rounded-xl border border-input bg-white pl-4 pr-12 text-lg font-medium text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-ring appearance-none"
               value={activeTab}
               onChange={(e) => setActiveTab(e.target.value as Tab)}
             >
@@ -96,6 +106,9 @@ export function Dashboard() {
                 <option key={t.id} value={t.id}>{t.label}</option>
               ))}
             </select>
+            <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-muted-foreground">
+              <ChevronsUpDown className="h-4 w-4 opacity-70" />
+            </span>
           </div>
         </div>
         <div className="hidden sm:block overflow-x-auto">
