@@ -400,31 +400,18 @@ export const createMessageColumns = ({
     header: "Message",
     cell: ({ row }) => {
       const m = row.original
-      // Custom messages (both manual and study) can be edited if pending
       const canEdit = m.status === "pending" && !m.aggregated && !(m.source === "study" && m.messageSource === "predefined")
-      
       return (
         <div className="space-y-1 max-w-sm">
-          <div className="flex items-start gap-2">
-            <div className="flex-1">
-              <ExpandableText text={m.message} />
-            </div>
-            {canEdit && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onEdit(m)}
-                className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
-                title="Edit message"
-              >
-                <Pencil className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
+          <EditableTextCell
+            value={m.message}
+            multiline
+            expandable
+            disabled={!canEdit}
+            onSave={async (next) => onUpdate(m, { message: next })}
+          />
           {m.template && (
-            <div className="text-xs text-blue-600">
-              Template: {m.template.name}
-            </div>
+            <div className="text-xs text-blue-600">Template: {m.template.name}</div>
           )}
         </div>
       )
@@ -434,29 +421,13 @@ export const createMessageColumns = ({
     accessorKey: "scheduledFor",
     header: "Scheduled For",
     cell: ({ row }) => {
-      const m = row.original
-      const canEdit = isAdmin && !m.aggregated && m.status === "pending"
-      const d = new Date(m.scheduledFor)
-      
+      const d = new Date(row.original.scheduledFor)
       return (
-        <div className="flex items-center gap-2">
-          <div>
-            <div>{d.toLocaleDateString()}</div>
-            <div className="text-muted-foreground text-sm">
-              {d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </div>
+        <div>
+          <div>{d.toLocaleDateString()}</div>
+          <div className="text-muted-foreground text-sm">
+            {d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </div>
-          {canEdit && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onEdit(m)}
-              className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
-              title="Edit schedule"
-            >
-              <Pencil className="h-3 w-3" />
-            </Button>
-          )}
         </div>
       )
     },
