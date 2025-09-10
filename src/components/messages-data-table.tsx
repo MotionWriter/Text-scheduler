@@ -48,6 +48,9 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
   onNewMessage: () => void
   isLoading?: boolean
+  title?: string
+  hideHeader?: boolean
+  hideControls?: boolean
 }
 
 export function MessagesDataTable<TData, TValue>({
@@ -55,6 +58,9 @@ export function MessagesDataTable<TData, TValue>({
   data,
   onNewMessage,
   isLoading = false,
+  title = "Scheduled Messages",
+  hideHeader = false,
+  hideControls = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "scheduledFor", desc: false }
@@ -123,31 +129,34 @@ export function MessagesDataTable<TData, TValue>({
   return (
     <div className="w-full space-y-4">
       {/* Header with title and new message button */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Scheduled Messages</h2>
-          <div className="flex gap-4 mt-2">
-            <Badge variant="outline" className="bg-yellow-50">
-              {pendingCount} Pending
-            </Badge>
-            <Badge variant="outline" className="bg-green-50">
-              {sentCount} Sent
-            </Badge>
-            {failedCount > 0 && (
-              <Badge variant="outline" className="bg-red-50">
-                {failedCount} Failed
+      {!hideHeader && (
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
+            <div className="flex gap-4 mt-2">
+              <Badge variant="outline" className="bg-yellow-50">
+                {pendingCount} Pending
               </Badge>
-            )}
+              <Badge variant="outline" className="bg-green-50">
+                {sentCount} Sent
+              </Badge>
+              {failedCount > 0 && (
+                <Badge variant="outline" className="bg-red-50">
+                  {failedCount} Failed
+                </Badge>
+              )}
+            </div>
           </div>
+          <Button onClick={onNewMessage} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Schedule Message
+          </Button>
         </div>
-        <Button onClick={onNewMessage} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Schedule Message
-        </Button>
-      </div>
+      )}
 
       {/* Filters and search */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
+      {!hideControls && (
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
         <div className="relative w-full sm:flex-1 sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
@@ -210,6 +219,7 @@ export function MessagesDataTable<TData, TValue>({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      )}
 
       {/* Table */}
       <div className="bg-white rounded-lg border shadow-sm overflow-hidden">

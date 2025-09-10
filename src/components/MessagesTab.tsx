@@ -10,6 +10,8 @@ import { MessagesMobileList } from "./messages-mobile-list";
 
 export function MessagesTab() {
   const messages = useQuery(api.allScheduledMessages.listAll) || [];
+  const pendingAndFailed = (messages as any[]).filter((m) => m.status !== "sent");
+  const sentMessages = (messages as any[]).filter((m) => m.status === "sent");
   const user = useQuery(api.auth.loggedInUser);
   const isAdmin = user?.isAdmin || false;
   const createMessage = useMutation(api.scheduledMessages.create);
@@ -24,6 +26,7 @@ export function MessagesTab() {
   const [showDialog, setShowDialog] = useState(false);
   const [editingMessage, setEditingMessage] = useState<ScheduledMessage | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSent, setShowSent] = useState(false);
 
   const handleEdit = (message: ScheduledMessage) => {
     setEditingMessage(message);
@@ -171,12 +174,36 @@ export function MessagesTab() {
   return (
     <div className="space-y-6">
       {/* Desktop table */}
-      <div className="hidden md:block">
+      <div className="hidden md:block space-y-4">
         <MessagesDataTable
           columns={columns}
-          data={messages}
+          data={pendingAndFailed}
           onNewMessage={handleNewMessage}
         />
+
+        {sentMessages.length > 0 && (
+          <div className="rounded-xl border bg-muted/30">
+            <button
+              onClick={() => setShowSent((s) => !s)}
+              className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/60"
+              aria-expanded={showSent}
+            >
+              <span>Sent Messages ({sentMessages.length})</span>
+              <span className="text-muted-foreground">{showSent ? "Hide" : "Show"}</span>
+            </button>
+            {showSent && (
+              <div className="p-2">
+                <MessagesDataTable
+                  columns={columns}
+                  data={sentMessages}
+                  onNewMessage={handleNewMessage}
+                  hideHeader
+                  hideControls
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Mobile header + list */}
@@ -190,11 +217,34 @@ export function MessagesTab() {
           </button>
         </div>
         <MessagesMobileList
-          data={messages as ScheduledMessage[]}
+          data={pendingAndFailed as ScheduledMessage[]}
           onEdit={handleEdit}
           onDelete={handleDelete}
           onDuplicate={handleDuplicate}
         />
+
+        {sentMessages.length > 0 && (
+          <div className="rounded-xl border bg-muted/30">
+            <button
+              onClick={() => setShowSent((s) => !s)}
+              className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/60"
+              aria-expanded={showSent}
+            >
+              <span>Sent Messages ({sentMessages.length})</span>
+              <span className="text-muted-foreground">{showSent ? "Hide" : "Show"}</span>
+            </button>
+            {showSent && (
+              <div className="p-3">
+                <MessagesMobileList
+                  data={sentMessages as ScheduledMessage[]}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onDuplicate={handleDuplicate}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
       
       <MessageFormDialog

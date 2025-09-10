@@ -88,11 +88,15 @@ export function MessagesMobileList({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem onClick={() => onEdit(m)}>Edit</DropdownMenuItem>
-                    {onDuplicate && (
+                    {m.status === "pending" && (
+                      <DropdownMenuItem onClick={() => onEdit(m)}>Edit</DropdownMenuItem>
+                    )}
+                    {onDuplicate && m.status !== "sent" && (
                       <DropdownMenuItem onClick={() => onDuplicate(m)}>Duplicate</DropdownMenuItem>
                     )}
-                    <DropdownMenuItem onClick={() => onDelete(m)} className="text-destructive">Delete</DropdownMenuItem>
+                    {(m.status === "pending" || m.status === "failed") && (
+                      <DropdownMenuItem onClick={() => onDelete(m)} className="text-destructive">Delete</DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
