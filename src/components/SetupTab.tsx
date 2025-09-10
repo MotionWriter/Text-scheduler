@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 
 export function SetupTab() {
-  const user = useQuery(api.auth.loggedInUser);
   const apiKeys = useQuery(api.apiKeys.list) || [];
   const createApiKey = useMutation(api.apiKeys.create);
   const [currentStep, setCurrentStep] = useState(1);
@@ -18,9 +17,9 @@ export function SetupTab() {
       const result = await createApiKey({ name: "iPhone Shortcut Setup" });
       setApiKey(result.apiKey);
       setCurrentStep(3);
-      toast.success("API key created successfully!");
+      toast.success("Secret password created!");
     } catch (error) {
-      toast.error("Failed to create API key");
+      toast.error("Failed to create secret password");
     } finally {
       setIsCreatingApiKey(false);
     }
@@ -29,20 +28,23 @@ export function SetupTab() {
   // Primary mobile CTA by step
   const getMobilePrimaryCta = () => {
     if (currentStep === 1) {
-      return { label: "Download Shortcut & Continue", onClick: downloadShortcut, disabled: false } as const;
+      return { label: "Next", onClick: () => setCurrentStep(2), disabled: false } as const;
     }
     if (currentStep === 2) {
-      return { label: isCreatingApiKey ? "Creating..." : "Create API Key", onClick: handleCreateApiKey, disabled: isCreatingApiKey } as const;
+      return { label: "Download & Continue", onClick: downloadShortcut, disabled: false } as const;
     }
-    if (currentStep === 3 && apiKey) {
-      return { label: "Continue to Test", onClick: () => setCurrentStep(4), disabled: false } as const;
+    if (currentStep === 3) {
+      return { label: isCreatingApiKey ? "Creating..." : "Create", onClick: handleCreateApiKey, disabled: isCreatingApiKey } as const;
+    }
+    if (currentStep === 4 && apiKey) {
+      return { label: "Continue to Test", onClick: () => setCurrentStep(5), disabled: false } as const;
     }
     return null;
   };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success("API key copied to clipboard!");
+    toast.success("Secret password copied to clipboard!");
   };
 
   const downloadShortcut = () => {
@@ -58,36 +60,10 @@ export function SetupTab() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    setCurrentStep(2);
+    setCurrentStep(3);
     toast.success("Shortcut downloaded! Open it on your iPhone to install.");
   };
 
-  const steps = [
-    {
-      number: 1,
-      title: "Download Apple Shortcut",
-      description: "Download the Message Scheduler shortcut to your iPhone",
-      completed: currentStep > 1,
-    },
-    {
-      number: 2,
-      title: "Create API Key",
-      description: "Generate an API key for your shortcut to connect securely",
-      completed: currentStep > 2,
-    },
-    {
-      number: 3,
-      title: "Configure Shortcut",
-      description: "Add your API key to the shortcut settings",
-      completed: currentStep > 3,
-    },
-    {
-      number: 4,
-      title: "Run Test",
-      description: "Test the connection to activate your account",
-      completed: false,
-    },
-  ];
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -95,98 +71,52 @@ export function SetupTab() {
         <h1 className="text-3xl font-bold text-gray-900 mb-4">
           Welcome to Message Scheduler! 📱
         </h1>
-        <p className="text-lg text-gray-600 mb-8">
-          To get started, you'll need to set up the Apple Shortcut on your iPhone. 
-          This allows you to send messages directly from your phone using your scheduled content.
-        </p>
+        {currentStep === 1 && (
+          <p className="text-lg text-gray-600 mb-8">
+            To get started, you'll need to set up the Apple Shortcut on your iPhone. 
+            This allows you to send messages directly from your phone using your scheduled content.
+          </p>
+        )}
       </div>
 
-      {/* Progress Steps - mobile first (vertical), desktop horizontal */}
-      <div className="mb-6">
-        {/* Mobile (vertical) */}
-        <ol className="md:hidden space-y-4">
-          {steps.map((step) => (
-            <li key={step.number} className="flex items-start">
-              <div
-                className={`mt-0.5 w-7 h-7 rounded-full flex items-center justify-center text-sm font-semibold ${
-                  step.completed
-                    ? "bg-green-500 text-white"
-                    : currentStep === step.number
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-300 text-gray-600"
-                }`}
-              >
-                {step.completed ? "✓" : step.number}
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">{step.title}</p>
-                <p className="text-xs text-gray-500">{step.description}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-
-        {/* Desktop (horizontal) */}
-        <div className="hidden md:flex items-center mb-2">
-          {steps.map((step, index) => (
-            <div key={step.number} className="flex-1 flex items-center">
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-                  step.completed
-                    ? "bg-green-500 text-white"
-                    : currentStep === step.number
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-300 text-gray-600"
-                }`}
-              >
-                {step.completed ? "✓" : step.number}
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">{step.title}</p>
-                <p className="text-xs text-gray-500">{step.description}</p>
-              </div>
-              {index < steps.length - 1 && (
-                <div
-                  className={`flex-1 h-0.5 mx-4 ${step.completed ? "bg-green-500" : "bg-gray-300"}`}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* Step Content */}
       <div className="bg-white rounded-lg shadow-sm border p-6 sm:p-8">
         {currentStep === 1 && (
           <div className="text-center space-y-6">
             <div className="text-5xl sm:text-6xl mb-4">📱</div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Download Apple Shortcut</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Download the Message Scheduler shortcut to your iPhone. This shortcut will allow you 
-              to send your scheduled messages directly from your phone.
-            </p>
-            <Button onClick={downloadShortcut} className="hidden md:inline-flex px-8 min-h-[44px]">
-              Download Shortcut File
+            <Button onClick={() => setCurrentStep(2)} className="hidden md:inline-flex px-8 h-11">
+              Next
             </Button>
-            <p className="text-sm text-gray-500">
-              After downloading, open the file on your iPhone to install the shortcut
-            </p>
           </div>
         )}
 
         {currentStep === 2 && (
           <div className="text-center space-y-6">
-            <div className="text-5xl sm:text-6xl mb-4">🔑</div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Create Your API Key</h2>
+            <div className="text-5xl sm:text-6xl mb-4">📱</div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Download Apple Shortcut</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              You'll need an API key to securely connect your shortcut to your account. 
-              Click the button below to generate your personal API key.
+              Tap Download to install the shortcut on your iPhone.
+            </p>
+            <Button onClick={downloadShortcut} className="hidden md:inline-flex px-8 min-h-[44px]">
+              Download
+            </Button>
+          </div>
+        )}
+
+        {currentStep === 3 && (
+          <div className="text-center space-y-6">
+            <div className="text-5xl sm:text-6xl mb-4">🔑</div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Create Your Secret Password</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              You'll use a secret password so the shortcut can connect to your account securely.
+              Tap the button below to create yours.
             </p>
             
             {apiKeys.length > 0 && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <p className="text-blue-800 font-medium">
-                  You already have {apiKeys.length} API key(s) created
+                  You already have {apiKeys.length} secret password(s) created
                 </p>
                 <p className="text-blue-600 text-sm mt-1">
                   You can create a new one for this setup or use an existing one
@@ -195,12 +125,12 @@ export function SetupTab() {
             )}
 
             <Button onClick={handleCreateApiKey} disabled={isCreatingApiKey} className="hidden md:inline-flex px-8 min-h-[44px]">
-              {isCreatingApiKey ? "Creating..." : "Create API Key"}
+              {isCreatingApiKey ? "Creating..." : "Create"}
             </Button>
           </div>
         )}
 
-        {currentStep === 3 && apiKey && (
+        {currentStep === 4 && apiKey && (
           <div className="space-y-6">
             <div className="text-center">
               <div className="text-5xl sm:text-6xl mb-4">⚙️</div>
@@ -212,10 +142,10 @@ export function SetupTab() {
 
             <div className="bg-green-50 border border-green-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-green-800 mb-3">
-                Your API Key is Ready!
+                Your secret password is ready!
               </h3>
               <p className="text-green-700 mb-4">
-                Copy this API key and paste it into your Apple Shortcut:
+                Copy this secret password and paste it into your Apple Shortcut:
               </p>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-4">
                 <code className="bg-white px-3 py-2 rounded border flex-1 font-mono text-sm break-all">
@@ -230,7 +160,7 @@ export function SetupTab() {
                 <p><strong>Instructions:</strong></p>
                 <ol className="list-decimal list-inside space-y-1 ml-4">
                   <li>Open the Message Scheduler shortcut on your iPhone</li>
-                  <li>When prompted for an API key, paste the key above</li>
+                  <li>When prompted for your secret password, paste the value above</li>
                   <li>Save the shortcut configuration</li>
                   <li>Return here and click "Continue to Test" below</li>
                 </ol>
@@ -238,14 +168,14 @@ export function SetupTab() {
             </div>
 
             <div className="text-center">
-              <Button onClick={() => setCurrentStep(4)} className="hidden md:inline-flex px-8 min-h-[44px]">
+              <Button onClick={() => setCurrentStep(5)} className="hidden md:inline-flex px-8 min-h-[44px]">
                 Continue to Test
               </Button>
             </div>
           </div>
         )}
 
-        {currentStep === 4 && (
+        {currentStep === 5 && (
           <div className="text-center space-y-6">
             <div className="text-5xl sm:text-6xl mb-4">🧪</div>
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Test Your Connection</h2>
@@ -274,34 +204,12 @@ export function SetupTab() {
             </div>
 
             <p className="text-sm text-gray-500">
-              Having trouble? Make sure you're connected to the internet and that you pasted the API key correctly.
+              Having trouble? Make sure you're connected to the internet and that you pasted your secret password correctly.
             </p>
           </div>
         )}
       </div>
 
-      {/* Help Section */}
-      <div className="bg-gray-50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Need Help?</h3>
-        <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-600">
-          <div>
-            <h4 className="font-medium text-gray-900">Can't install the shortcut?</h4>
-            <p>Make sure you're opening the .shortcut file on your iPhone, not on a computer.</p>
-          </div>
-          <div>
-            <h4 className="font-medium text-gray-900">API key not working?</h4>
-            <p>Double-check that you copied the entire key without any extra spaces.</p>
-          </div>
-          <div>
-            <h4 className="font-medium text-gray-900">Shortcut not connecting?</h4>
-            <p>Verify your iPhone has an internet connection and try running the shortcut again.</p>
-          </div>
-          <div>
-            <h4 className="font-medium text-gray-900">Still having issues?</h4>
-            <p>Contact support with your user email: {user?.email}</p>
-          </div>
-        </div>
-      </div>
       {/* Sticky mobile CTA footer */}
       <MobileStickyCtas 
         currentStep={currentStep} 
@@ -341,7 +249,7 @@ function MobileStickyCtas({
           <button
             type="button"
             onClick={onBack}
-            className="flex-1 border border-gray-300 text-gray-700 rounded-lg px-4 py-3 min-h-[44px] font-medium"
+            className="flex-1 border border-gray-300 text-gray-700 rounded-lg px-4 h-11 font-medium"
           >
             Back
           </button>
@@ -350,7 +258,7 @@ function MobileStickyCtas({
           <Button
             onClick={primary.onClick}
             disabled={primary.disabled}
-            className="flex-[2]"
+            className="flex-[2] h-11 px-5 whitespace-nowrap"
           >
             {primary.label}
           </Button>
