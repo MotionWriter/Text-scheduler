@@ -102,14 +102,16 @@ const [bulkFileName, setBulkFileName] = useState("");
     setShowForm(true);
   };
 
-  const handleDelete = async (id: Id<"contacts">) => {
-    if (confirm("Are you sure you want to delete this contact?")) {
-      try {
-        await removeContact({ id });
-        toast.success("Contact deleted successfully");
-      } catch (error) {
-        toast.error("Failed to delete contact");
-      }
+  const handleDelete = async (id: Id<"contacts">, opts?: { confirmed?: boolean }) => {
+    if (!opts?.confirmed) {
+      const ok = confirm("Are you sure you want to delete this contact?");
+      if (!ok) return;
+    }
+    try {
+      await removeContact({ id });
+      toast.success("Contact deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete contact");
     }
   };
 
@@ -680,7 +682,7 @@ const [bulkFileName, setBulkFileName] = useState("");
                         <div className="flex items-center justify-end gap-3">
                           <span className="text-red-600 font-medium">Delete:</span>
                           <button
-                            onClick={() => handleDelete(contact._id)}
+                            onClick={async () => { await handleDelete(contact._id, { confirmed: true }); setConfirmDeleteId(null); }}
                             className="text-red-600 hover:text-red-800"
                           >
                             Yes
