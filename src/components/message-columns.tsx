@@ -52,7 +52,7 @@ export type ScheduledMessage = {
 
 interface MessageColumnsProps {
   onEdit: (message: ScheduledMessage) => void
-  onDelete: (message: ScheduledMessage, opts?: { confirmed?: boolean }) => void
+  onDelete: (message: ScheduledMessage) => void
   onDuplicate?: (message: ScheduledMessage) => void
   onUpdate: (row: ScheduledMessage, patch: Partial<Pick<ScheduledMessage, "message" | "scheduledFor" | "notes">>) => Promise<void>
 }
@@ -383,7 +383,7 @@ export const createMessageColumns = ({
           ) : message.source === 'manual' ? (
             <>
               <div className="w-3 h-3 rounded-full bg-green-500" />
-              <span className="font-medium">Manual</span>
+              <span className="font-medium">Custom</span>
             </>
           ) : (
             <>
@@ -502,32 +502,9 @@ export const createMessageColumns = ({
     enableHiding: false,
     cell: ({ row }) => {
       const message = row.original
-      // Hooks must be called unconditionally and in the same order.
-      const [confirming, setConfirming] = React.useState(false)
-      const [menuOpen, setMenuOpen] = React.useState(false)
-
-      if (confirming) {
-        return (
-          <div className="flex items-center justify-end gap-3">
-            <span className="text-red-600 font-medium">Delete:</span>
-            <button
-              className="text-red-600 hover:text-red-800"
-              onClick={(e) => { e.stopPropagation(); onDelete(message, { confirmed: true }); setConfirming(false); }}
-            >
-              Yes
-            </button>
-            <button
-              className="text-green-600 hover:text-green-800"
-              onClick={(e) => { e.stopPropagation(); setConfirming(false); }}
-            >
-              No
-            </button>
-          </div>
-        )
-      }
 
       return (
-        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+        <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Open menu</span>
@@ -545,9 +522,10 @@ export const createMessageColumns = ({
                 <DropdownMenuSeparator />
               </>
             )}
+            {/* Allow Delete for pending or failed messages, including aggregated group rows */}
             {(message.status === "pending" || message.status === "failed") && (
               <>
-                <DropdownMenuItem onClick={() => { setConfirming(true); setMenuOpen(false); }}>
+                <DropdownMenuItem onClick={() => onDelete(message)}>
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete
                 </DropdownMenuItem>

@@ -29,7 +29,7 @@ export function MessagesTab() {
     setShowDialog(true);
   };
 
-  const handleDelete = async (message: ScheduledMessage, opts?: { confirmed?: boolean }) => {
+  const handleDelete = async (message: ScheduledMessage) => {
     if (message.status !== "pending" && message.status !== "failed") {
       toast.error("Only pending or failed messages can be deleted");
       return;
@@ -39,14 +39,12 @@ export function MessagesTab() {
       ? message.messageIds.length
       : 1;
 
-    if (!opts?.confirmed) {
-      const ok = confirm(
-        count > 1
-          ? `Delete this grouped scheduled message for ${count} recipients?`
-          : "Are you sure you want to delete this scheduled message?"
-      );
-      if (!ok) return;
-    }
+    const ok = confirm(
+      count > 1
+        ? `Delete this grouped scheduled message for ${count} recipients?`
+        : "Are you sure you want to delete this scheduled message?"
+    );
+    if (!ok) return;
 
     try {
       if (message.source === "manual") {
