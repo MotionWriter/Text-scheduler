@@ -357,6 +357,39 @@ export function ContactsTab() {
     }
   };
 
+  // Inline edit helpers
+  const commitUpdate = async (
+    contact: any,
+    patch: Partial<{ name: string; phoneNumber: string; email?: string; notes?: string }>
+  ) => {
+    try {
+      const payload = {
+        id: contact._id as Id<"contacts">,
+        name: patch.name ?? contact.name,
+        phoneNumber: patch.phoneNumber ? normalizeUsDigits(patch.phoneNumber) : contact.phoneNumber,
+        email: patch.email === undefined ? contact.email : (patch.email || undefined),
+        notes: patch.notes === undefined ? contact.notes : (patch.notes || undefined),
+      };
+      // Only submit if something actually changed
+      const changed =
+        payload.name !== contact.name ||
+        payload.phoneNumber !== contact.phoneNumber ||
+        (payload.email || "") !== (contact.email || "") ||
+        (payload.notes || "") !== (contact.notes || "");
+      if (!changed) return;
+      await updateContact(payload as any);
+      toast.success("Saved");
+    } catch (e) {
+      toast.error("Failed to save");
+    }
+  };
+
+  const handleEnterBlur = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      (e.target as HTMLInputElement).blur();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -494,7 +527,6 @@ export function ContactsTab() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem onClick={() => handleEdit(contact)}>Edit Contact</DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(contact._id)}>Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -571,16 +603,38 @@ export function ContactsTab() {
                 {contacts.map((contact) => (
                   <tr key={contact._id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {contact.name}
+                      <input
+                        defaultValue={contact.name}
+                        onBlur={(e) => commitUpdate(contact, { name: e.currentTarget.value })}
+                        onKeyDown={handleEnterBlur}
+                        className="w-full bg-transparent border border-transparent focus:border-gray-300 focus:bg-white rounded px-2 py-1 -mx-2"
+                      />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatPhone(contact.phoneNumber)}
+                      <input
+                        defaultValue={formatPhone(contact.phoneNumber)}
+                        onBlur={(e) => commitUpdate(contact, { phoneNumber: e.currentTarget.value })}
+                        onKeyDown={handleEnterBlur}
+                        className="w-full bg-transparent border border-transparent focus:border-gray-300 focus:bg-white rounded px-2 py-1 -mx-2"
+                        inputMode="tel"
+                      />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {contact.email || "-"}
+                      <input
+                        defaultValue={contact.email || ""}
+                        onBlur={(e) => commitUpdate(contact, { email: e.currentTarget.value })}
+                        onKeyDown={handleEnterBlur}
+                        className="w-full bg-transparent border border-transparent focus:border-gray-300 focus:bg-white rounded px-2 py-1 -mx-2"
+                        type="email"
+                      />
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
-                      {contact.notes || "-"}
+                      <input
+                        defaultValue={contact.notes || ""}
+                        onBlur={(e) => commitUpdate(contact, { notes: e.currentTarget.value })}
+                        onKeyDown={handleEnterBlur}
+                        className="w-full bg-transparent border border-transparent focus:border-gray-300 focus:bg-white rounded px-2 py-1 -mx-2"
+                      />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="max-w-xs">
@@ -614,8 +668,12 @@ export function ContactsTab() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Button variant="ghost" onClick={() => handleEdit(contact)} className="mr-2">Edit</Button>
-                      <Button variant="danger" onClick={() => handleDelete(contact._id)}>Delete</Button>
+                      <button
+                        onClick={() => handleDelete(contact._id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))}
