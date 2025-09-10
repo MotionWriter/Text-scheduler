@@ -99,6 +99,20 @@ export const listAll = query({
       const lesson = await ctx.db.get(selection.lessonId);
       const studyBook = lesson ? await ctx.db.get(lesson.studyBookId) : null;
       
+      // Get the group preference for this study book
+      let group = null;
+      let groupId = null;
+      if (studyBook) {
+        const groupPref = await ctx.db
+          .query("studyGroupPreferences")
+          .withIndex("by_user_study", (q) => q.eq("userId", userId).eq("studyBookId", studyBook._id))
+          .first();
+        if (groupPref) {
+          groupId = groupPref.groupId;
+          group = await ctx.db.get(groupPref.groupId);
+        }
+      }
+      
       let messageContent = "";
       let messageSource = "unknown";
       
@@ -121,7 +135,7 @@ export const listAll = query({
         _creationTime: selection._creationTime,
         userId: selection.userId,
         contactId: null, // Study messages don't have specific contacts yet
-        groupId: null,
+        groupId,
         templateId: null,
         message: messageContent,
         scheduledFor: selection.scheduledAt || 0,
@@ -130,7 +144,7 @@ export const listAll = query({
         notes: selection.deliveryError,
         category: `${studyBook?.title} - Lesson ${lesson?.lessonNumber}`,
         contact: null,
-        group: null,
+        group,
         template: null,
         source: "study" as const,
         messageSource,

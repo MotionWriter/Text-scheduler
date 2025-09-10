@@ -345,23 +345,50 @@ export const createMessageColumns = ({
               />
               <span className="font-medium">Group: {message.group.name}</span>
             </>
-          ) : message.source === 'study' ? (
+          ) : message.contact ? (
             <>
               <div
-                className="w-3 h-3 rounded-full bg-blue-500"
+                className="w-3 h-3 rounded-full bg-gray-400"
               />
-              <span className="font-medium">
-                Study: {message.studyBook && message.lesson
-                  ? `${message.studyBook.title} - Lesson ${message.lesson.lessonNumber}`
-                  : 'Study Message'}
-              </span>
+              <span className="font-medium">Contact: {message.contact.name}</span>
             </>
           ) : (
             <>
               <div
                 className="w-3 h-3 rounded-full bg-gray-400"
               />
-              <span className="font-medium">Contact: {message.contact?.name || 'Unknown Contact'}</span>
+              <span className="font-medium">Unknown Recipient</span>
+            </>
+          )}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "source",
+    header: "Source",
+    cell: ({ row }) => {
+      const message = row.original
+      return (
+        <div className="flex items-center gap-2">
+          {message.source === 'study' ? (
+            <>
+              <div className="w-3 h-3 rounded-full bg-blue-500" />
+              <span className="font-medium">
+                {message.studyBook && message.lesson
+                  ? `${message.studyBook.title} - Lesson ${message.lesson.lessonNumber}`
+                  : 'Study Message'}
+              </span>
+            </>
+          ) : message.source === 'manual' ? (
+            <>
+              <div className="w-3 h-3 rounded-full bg-green-500" />
+              <span className="font-medium">Manual</span>
+            </>
+          ) : (
+            <>
+              <div className="w-3 h-3 rounded-full bg-gray-400" />
+              <span className="font-medium">Unknown</span>
             </>
           )}
         </div>
@@ -497,8 +524,10 @@ export const createMessageColumns = ({
         )
       }
 
+      const [menuOpen, setMenuOpen] = React.useState(false)
+
       return (
-        <DropdownMenu>
+        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Open menu</span>
@@ -518,7 +547,7 @@ export const createMessageColumns = ({
             )}
             {(message.status === "pending" || message.status === "failed") && (
               <>
-                <DropdownMenuItem onClick={() => setConfirming(true)}>
+                <DropdownMenuItem onClick={() => { setConfirming(true); setMenuOpen(false); }}>
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete
                 </DropdownMenuItem>
