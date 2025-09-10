@@ -11,6 +11,7 @@ import { Badge } from "./ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AddGroupDialog } from "./AddGroupDialog";
 import { AddContactDialog } from "./AddContactDialog";
+import { EditContactDialog } from "./EditContactDialog";
 
 function normalizeUsDigits(value: string) {
   let d = value.replace(/\D/g, "");
@@ -55,7 +56,10 @@ export function ContactsTab() {
   const [bulkParsing, setBulkParsing] = useState(false);
   const [bulkUploading, setBulkUploading] = useState(false);
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number }>({ done: 0, total: 0 });
-  const [bulkFileName, setBulkFileName] = useState("");
+const [bulkFileName, setBulkFileName] = useState("");
+  // Mobile edit dialog state
+  const [editContactOpen, setEditContactOpen] = useState(false);
+  const [editingMobileContact, setEditingMobileContact] = useState<any | null>(null);
   type ContactInput = { name: string; phoneNumber: string; email?: string; notes?: string; groups?: string[] };
   const [bulkValid, setBulkValid] = useState<ContactInput[]>([]);
   const [bulkInvalid, setBulkInvalid] = useState<{ row: number; reason: string }[]>([]);
@@ -407,7 +411,8 @@ export function ContactsTab() {
       </div>
 
       {/* Add Contact Dialog */}
-      <AddContactDialog open={addContactOpen} onOpenChange={setAddContactOpen} />
+<AddContactDialog open={addContactOpen} onOpenChange={setAddContactOpen} />
+      <EditContactDialog open={editContactOpen} onOpenChange={(o) => { setEditContactOpen(o); if (!o) setEditingMobileContact(null); }} contact={editingMobileContact} />
 
       {/* Bulk Upload Modal */}
       {showBulk && (
@@ -526,7 +531,8 @@ export function ContactsTab() {
                           <MoreHorizontal className="h-5 w-5" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
+<DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => { setEditingMobileContact(contact); setEditContactOpen(true); }}>Edit Contact</DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(contact._id)}>Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
