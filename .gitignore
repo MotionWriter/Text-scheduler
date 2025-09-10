@@ -25,3 +25,6 @@ dist-ssr
 
 # Ignored for the template, you probably want to remove it:
 package-lock.json
+# Local auth keys (do not commit)
+jwks.json
+private_pkcs8.pem

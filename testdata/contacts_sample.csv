@@ -1,6 +1,6 @@
-name,phoneNumber,email,notes
-John Doe,555-123-4567,john@example.com,Leader
-Jane Smith,555-765-4321,,New attendee
-Alex "AJ" Johnson,555-000-1111,aj@example.org,Prefers SMS
-Empty Email,555-222-3333,,
+name,phoneNumber,email,notes,groups
+John Doe,555-123-4567,john@example.com,Leader,Small Group Leaders
+Jane Smith,555-765-4321,,New attendee,Youth Group
+Alex "AJ" Johnson,555-000-1111,aj@example.org,Prefers SMS,
+Empty Email,555-222-3333,,,
 

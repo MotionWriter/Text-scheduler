@@ -36,7 +36,7 @@ export function StudyBookBrowser({ studyBooks, onSelectStudyBook }: StudyBookBro
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-lg font-semibold text-foreground line-clamp-2">{book.title}</h4>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]">
                     {book.totalLessons} lessons
                   </span>
                 </div>

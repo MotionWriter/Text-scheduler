@@ -46,6 +46,7 @@ import type * as userCustomMessages from "../userCustomMessages.js";
 import type * as userDashboard from "../userDashboard.js";
 import type * as userSelectedMessages from "../userSelectedMessages.js";
 import type * as userVerification from "../userVerification.js";
+import type * as utils_groupColors from "../utils/groupColors.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -89,6 +90,7 @@ declare const fullApi: ApiFromModules<{
   userDashboard: typeof userDashboard;
   userSelectedMessages: typeof userSelectedMessages;
   userVerification: typeof userVerification;
+  "utils/groupColors": typeof utils_groupColors;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

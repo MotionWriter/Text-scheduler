@@ -4,8 +4,11 @@ import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { Id } from "../../convex/_generated/dataModel";
 import { Button } from "./ui/button";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Download } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+// import { GroupComboBox } from "./ui/GroupComboBox";
+import { Badge } from "./ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function normalizeUsDigits(value: string) {
   let d = value.replace(/\D/g, "");
@@ -24,8 +27,12 @@ function formatPhone(value: string | undefined | null) {
 }
 
 export function ContactsTab() {
-  const contacts = useQuery(api.contacts.list) || [];
+  const contacts = useQuery(api.contacts.listWithGroups) || [];
   const createContact = useMutation(api.contacts.create);
+  const setSingleGroup = useMutation(api.groups.setContactToSingleGroup);
+  const clearGroups = useMutation(api.groups.clearContactGroups);
+  const groups = useQuery(api.groups.list) || [];
+  const createWithGroups = useMutation(api.contacts.createWithGroups);
   const updateContact = useMutation(api.contacts.update);
   const removeContact = useMutation(api.contacts.remove);
 
@@ -44,7 +51,7 @@ export function ContactsTab() {
   const [bulkUploading, setBulkUploading] = useState(false);
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number }>({ done: 0, total: 0 });
   const [bulkFileName, setBulkFileName] = useState("");
-  type ContactInput = { name: string; phoneNumber: string; email?: string; notes?: string };
+  type ContactInput = { name: string; phoneNumber: string; email?: string; notes?: string; groups?: string[] };
   const [bulkValid, setBulkValid] = useState<ContactInput[]>([]);
   const [bulkInvalid, setBulkInvalid] = useState<{ row: number; reason: string }[]>([]);
 
@@ -182,6 +189,7 @@ export function ContactsTab() {
       const phoneIdx = headers.findIndex((h) => ["phonenumber", "phone", "mobile", "cell"].includes(h));
       const emailIdx = headers.findIndex((h) => ["email", "emailaddress"].includes(h));
       const notesIdx = headers.findIndex((h) => ["notes", "note"].includes(h));
+      const groupIdx = headers.findIndex((h) => ["group", "groups"].includes(h));
 
       if (nameIdx === -1 || phoneIdx === -1) {
         setBulkInvalid([
@@ -203,6 +211,8 @@ export function ContactsTab() {
         const phoneNumber = (cols[phoneIdx] || "").trim();
         const email = emailIdx !== -1 ? (cols[emailIdx] || "").trim() : "";
         const notes = notesIdx !== -1 ? (cols[notesIdx] || "").trim() : "";
+        const groupsText = groupIdx !== -1 ? (cols[groupIdx] || "").trim() : "";
+        const groups = groupsText ? groupsText.split(/[,;|]/).map(g => g.trim()).filter(g => g) : [];
 
         if (!name) {
           invalids.push({ row: r + 1, reason: "Missing name" });
@@ -224,6 +234,7 @@ export function ContactsTab() {
           phoneNumber: cleanedPhone,
           email: email || undefined,
           notes: notes || undefined,
+          groups: groups.length > 0 ? groups : undefined,
         });
       }
 
@@ -246,6 +257,30 @@ export function ContactsTab() {
     setBulkInvalid([]);
   };
 
+  const downloadCsvTemplate = () => {
+    const headers = ["name","phoneNumber","email","notes","groups"]; // groups supports comma/semicolon/pipe separated values
+    const sampleRows = [
+      ["John Doe","555-123-4567","john@example.com","Leader","Small Group Leaders"],
+      ["Jane Smith","555-765-4321","","","Youth Group"],
+    ];
+    const csv = [headers.join(","), ...sampleRows.map(r => r.map((c) => {
+      // Escape fields with quotes or commas
+      const needsQuotes = /[",\n\r]/.test(c);
+      const escaped = String(c).replace(/"/g, '""');
+      return needsQuotes ? `"${escaped}"` : escaped;
+    }).join(","))].join("\n");
+
+    const blob = new Blob([csv + "\n"], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "contacts_template.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const uploadBulk = async () => {
     if (bulkValid.length === 0) return;
     setBulkUploading(true);
@@ -257,12 +292,22 @@ export function ContactsTab() {
     for (let i = 0; i < bulkValid.length; i++) {
       const c = bulkValid[i];
       try {
-        await createContact({
-          name: c.name,
-          phoneNumber: c.phoneNumber,
-          email: c.email || undefined,
-          notes: c.notes || undefined,
-        });
+        if (c.groups && c.groups.length > 0) {
+          await createWithGroups({
+            name: c.name,
+            phoneNumber: c.phoneNumber,
+            email: c.email || undefined,
+            notes: c.notes || undefined,
+            groupNames: c.groups,
+          });
+        } else {
+          await createContact({
+            name: c.name,
+            phoneNumber: c.phoneNumber,
+            email: c.email || undefined,
+            notes: c.notes || undefined,
+          });
+        }
         success++;
       } catch (err) {
         failed++;
@@ -379,7 +424,7 @@ export function ContactsTab() {
           <div className="flex items-start justify-between mb-4">
             <div>
               <h3 className="text-lg font-semibold">Add Contacts In Bulk</h3>
-              <p className="text-sm text-gray-600">Upload a CSV with columns: name, phoneNumber, [email], [notes]</p>
+              <p className="text-sm text-gray-600">Upload a CSV with columns: name, phoneNumber, [email], [notes], [groups]. Download the template below for exact formatting.</p>
             </div>
             <button
               onClick={resetBulk}
@@ -390,18 +435,31 @@ export function ContactsTab() {
           </div>
 
           <div className="space-y-4">
-            <div>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleCSVFile(f);
-                }}
-              />
-              {bulkFileName && (
-                <p className="text-sm text-gray-500 mt-1">Selected: {bulkFileName}</p>
-              )}
+            <div className="space-y-3">
+              <div>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleCSVFile(f);
+                  }}
+                />
+                {bulkFileName && (
+                  <p className="text-sm text-gray-500 mt-1">Selected: {bulkFileName}</p>
+                )}
+              </div>
+              <div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={downloadCsvTemplate}
+                  className="flex items-center gap-1"
+                >
+                  <Download className="h-4 w-4" />
+                  Download Template
+                </Button>
+              </div>
             </div>
 
             {bulkParsing && (
@@ -448,10 +506,6 @@ export function ContactsTab() {
               </button>
             </div>
 
-            <div className="text-xs text-gray-500">
-              Sample CSV:
-              <pre className="bg-gray-50 border rounded p-2 mt-1 overflow-auto">{"name,phoneNumber,email,notes\nJohn Doe,555-123-4567,john@example.com,Leader\nJane Smith,555-765-4321,,"}</pre>
-            </div>
           </div>
         </div>
       )}
@@ -481,12 +535,37 @@ export function ContactsTab() {
                           <MoreHorizontal className="h-5 w-5" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-36">
-                        <DropdownMenuItem onClick={() => handleEdit(contact)}>Edit</DropdownMenuItem>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => handleEdit(contact)}>Edit Contact</DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(contact._id)}>Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
+                </div>
+                <div className="mt-2">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Group</label>
+                  <Select
+                    value={contact.groups && contact.groups[0]?._id ? contact.groups[0]._id : "none"}
+                    onValueChange={(value) => {
+                      if (value === "none") {
+                        clearGroups({ contactId: contact._id as Id<"contacts"> })
+                      } else {
+                        setSingleGroup({ contactId: contact._id as Id<"contacts">, groupId: value as any })
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Select a group" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Group</SelectItem>
+                      {groups.map((g: any) => (
+                        <SelectItem key={g._id} value={g._id}>
+                          {g.name} ({g.memberCount} members)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             ))}
@@ -517,6 +596,9 @@ export function ContactsTab() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Notes
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Groups
+                  </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
@@ -536,6 +618,32 @@ export function ContactsTab() {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {contact.notes || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div className="max-w-xs">
+                        <Select
+                          value={contact.groups && contact.groups[0]?._id ? contact.groups[0]._id : "none"}
+                          onValueChange={(value) => {
+                            if (value === "none") {
+                              clearGroups({ contactId: contact._id as Id<"contacts"> })
+                            } else {
+                              setSingleGroup({ contactId: contact._id as Id<"contacts">, groupId: value as any })
+                            }
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a group" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">No Group</SelectItem>
+                            {groups.map((g: any) => (
+                              <SelectItem key={g._id} value={g._id}>
+                                {g.name} ({g.memberCount} members)
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Button variant="ghost" onClick={() => handleEdit(contact)} className="mr-2">Edit</Button>

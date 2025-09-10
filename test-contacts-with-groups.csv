@@ -1,0 +1,5 @@
+name,phoneNumber,email,notes,groups
+John Leader,555-123-4567,john@example.com,Team Leader,Leadership Team
+Jane Member,555-765-4321,jane@example.com,Regular member,Youth Group
+Bob Smith,555-999-8888,bob@example.com,Active volunteer,"Leadership Team,Youth Group"
+Alice Jones,555-111-2222,alice@example.com,New member,Youth Group

@@ -12,6 +12,7 @@ import { MessagesTab } from "./components/MessagesTab";
 import { ApiKeysTab } from "./components/ApiKeysTab";
 import { SetupTab } from "./components/SetupTab";
 import { ChevronsUpDown } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Tab = "messages" | "contacts" | "groups" | "templates" | "study-messages" | "lessons" | "delivery" | "api-keys";
 
@@ -96,19 +97,19 @@ export function Dashboard() {
         {/* Mobile compact tab selector */}
         <div className="sm:hidden mb-2">
           <div className="max-w-full relative rounded-2xl border border-border/60 bg-white/60 shadow-sm p-1">
-            <select
-              aria-label="Select tab"
-              className="w-full h-12 rounded-xl border border-input bg-white pl-4 pr-12 text-lg font-medium text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-ring appearance-none"
+            <Select
               value={activeTab}
-              onChange={(e) => setActiveTab(e.target.value as Tab)}
+              onValueChange={(v) => setActiveTab(v as Tab)}
             >
-              {tabs.map((t) => (
-                <option key={t.id} value={t.id}>{t.label}</option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-muted-foreground">
-              <ChevronsUpDown className="h-4 w-4 opacity-70" />
-            </span>
+<SelectTrigger className="h-12 rounded-xl pl-4 pr-4 text-base">
+                <SelectValue placeholder="Select a tab" />
+              </SelectTrigger>
+              <SelectContent>
+                {tabs.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <div className="hidden sm:block overflow-x-auto">
