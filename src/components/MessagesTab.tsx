@@ -148,13 +148,26 @@ export function MessagesTab() {
         // Note: For scheduling changes on study messages, we'd need to update userSelectedMessages
         // but that's more complex and not implemented yet
       } else {
-        // For manual messages, use the existing logic
-        await updateMessage({
-          id: row._id,
-          message: patch.message ?? row.message,
-          scheduledFor: patch.scheduledFor ?? row.scheduledFor,
-          notes: patch.notes ?? row.notes,
-        })
+        // For manual messages, support aggregated and single updates
+        if (row.aggregated && Array.isArray(row.messageIds) && row.messageIds.length > 0) {
+          await Promise.all(
+            (row.messageIds as any[]).map((id) =>
+              updateMessage({
+                id: id as Id<"scheduledMessages">,
+                message: (patch.message ?? row.message),
+                scheduledFor: (patch.scheduledFor ?? row.scheduledFor),
+                notes: (patch.notes ?? row.notes),
+              })
+            )
+          )
+        } else {
+          await updateMessage({
+            id: row._id as Id<"scheduledMessages">,
+            message: patch.message ?? row.message,
+            scheduledFor: patch.scheduledFor ?? row.scheduledFor,
+            notes: patch.notes ?? row.notes,
+          })
+        }
         toast.success("Scheduled message updated")
       }
     } catch (error) {

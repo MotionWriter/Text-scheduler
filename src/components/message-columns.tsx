@@ -400,7 +400,8 @@ export const createMessageColumns = ({
     header: "Message",
     cell: ({ row }) => {
       const m = row.original
-      const canEdit = m.status === "pending" && !m.aggregated && !(m.source === "study" && m.messageSource === "predefined")
+      // Edit only for custom (manual) pending messages
+      const canEdit = m.status === "pending" && m.source === "manual"
       return (
         <div className="space-y-1 max-w-sm">
           <EditableTextCell
