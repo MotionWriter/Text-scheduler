@@ -50,6 +50,8 @@ export function ContactsTab() {
   });
   // Add Contact modal
   const [addContactOpen, setAddContactOpen] = useState(false);
+  // Desktop inline delete confirmation state
+  const [confirmDeleteId, setConfirmDeleteId] = useState<Id<"contacts"> | null>(null);
 
   // Bulk upload state
   const [showBulk, setShowBulk] = useState(false);
@@ -674,12 +676,32 @@ const [bulkFileName, setBulkFileName] = useState("");
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleDelete(contact._id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        Delete
-                      </button>
+                      {confirmDeleteId === (contact._id as Id<"contacts">) ? (
+                        <div className="flex items-center justify-end gap-3">
+                          <span className="text-red-600 font-medium">Delete:</span>
+                          <button
+                            onClick={() => handleDelete(contact._id)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            Yes
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="text-green-600 hover:text-green-800"
+                          >
+                            No
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-end">
+                          <button
+                            onClick={() => setConfirmDeleteId(contact._id as Id<"contacts">)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}

@@ -336,35 +336,32 @@ export const createMessageColumns = ({
     cell: ({ row }) => {
       const message = row.original
       return (
-        <div className="space-y-1">
+        <div className="flex items-center gap-2">
           {message.group ? (
             <>
-              <div className="font-medium flex items-center gap-2">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: message.group.color || "#3B82F6" }}
-                />
-                <span>{message.group.name}</span>
-                {message.aggregated && (
-                  <Badge variant="secondary" className="ml-1 text-[10px]">Group</Badge>
-                )}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {message.contact?.phoneNumber}
-              </div>
+              <div
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: message.group.color || "#3B82F6" }}
+              />
+              <span className="font-medium">Group: {message.group.name}</span>
             </>
           ) : message.source === 'study' ? (
             <>
-              <div className="font-medium">
-                {message.studyBook && message.lesson
+              <div
+                className="w-3 h-3 rounded-full bg-blue-500"
+              />
+              <span className="font-medium">
+                Study: {message.studyBook && message.lesson
                   ? `${message.studyBook.title} - Lesson ${message.lesson.lessonNumber}`
                   : 'Study Message'}
-              </div>
+              </span>
             </>
           ) : (
             <>
-              <div className="font-medium">{message.contact?.name || 'Unknown Contact'}</div>
-              <div className="text-sm text-muted-foreground">{formatPhone(message.contact?.phoneNumber || "")}</div>
+              <div
+                className="w-3 h-3 rounded-full bg-gray-400"
+              />
+              <span className="font-medium">Contact: {message.contact?.name || 'Unknown Contact'}</span>
             </>
           )}
         </div>
