@@ -502,7 +502,9 @@ export const createMessageColumns = ({
     enableHiding: false,
     cell: ({ row }) => {
       const message = row.original
+      // Hooks must be called unconditionally and in the same order.
       const [confirming, setConfirming] = React.useState(false)
+      const [menuOpen, setMenuOpen] = React.useState(false)
 
       if (confirming) {
         return (
@@ -523,8 +525,6 @@ export const createMessageColumns = ({
           </div>
         )
       }
-
-      const [menuOpen, setMenuOpen] = React.useState(false)
 
       return (
         <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
