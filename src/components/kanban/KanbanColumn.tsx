@@ -75,7 +75,7 @@ export function KanbanColumn({
               const lessonTitle = lesson?.title 
                 ? `Lesson ${lesson.lessonNumber}: ${lesson.title}` 
                 : `Lesson ${lesson?.lessonNumber ?? ''}`
-              const lessonDefaultTime = lesson?.defaultSendTime || "09:00"
+              const lessonDefaultTime = lesson?.defaultSendTime || "06:30"
 
               const messageType = (card as any).messageType as string | undefined
               return (

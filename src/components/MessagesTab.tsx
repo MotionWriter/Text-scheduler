@@ -163,20 +163,29 @@ export function MessagesTab() {
     }
   }
 
-  const columns = createMessageColumns({
+  const columnsActive = createMessageColumns({
     onEdit: handleEdit,
     onDelete: handleDelete,
     onDuplicate: handleDuplicate,
     onUpdate: handleInlineUpdate,
     isAdmin,
+    showActions: true,
   });
 
+  const columnsSent = createMessageColumns({
+    onEdit: handleEdit,
+    onDelete: handleDelete,
+    onDuplicate: handleDuplicate,
+    onUpdate: handleInlineUpdate,
+    isAdmin,
+    showActions: false,
+  });
   return (
     <div className="space-y-6">
       {/* Desktop table */}
       <div className="hidden md:block space-y-4">
         <MessagesDataTable
-          columns={columns}
+          columns={columnsActive}
           data={pendingAndFailed}
           onNewMessage={handleNewMessage}
         />
@@ -194,7 +203,7 @@ export function MessagesTab() {
             {showSent && (
               <div className="p-2">
                 <MessagesDataTable
-                  columns={columns}
+                  columns={columnsSent}
                   data={sentMessages}
                   onNewMessage={handleNewMessage}
                   hideHeader

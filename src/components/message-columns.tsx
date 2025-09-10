@@ -55,7 +55,6 @@ interface MessageColumnsProps {
   onEdit: (message: ScheduledMessage) => void
   onDelete: (message: ScheduledMessage) => void
   onDuplicate?: (message: ScheduledMessage) => void
-  onUpdate: (row: ScheduledMessage, patch: Partial<Pick<ScheduledMessage, "message" | "scheduledFor" | "notes">>) => Promise<void>
 }
 
 
@@ -324,10 +323,10 @@ export const createMessageColumns = ({
   onDuplicate,
   onUpdate,
   isAdmin,
-}: MessageColumnsProps & { isAdmin?: boolean }): ColumnDef<ScheduledMessage>[] => [
+  showActions = true,
+}: MessageColumnsProps & { isAdmin?: boolean; showActions?: boolean }): ColumnDef<ScheduledMessage>[] => [
   {
     accessorKey: "recipient",
-    header: "Recipient",
     accessorFn: (row) => {
       if (row.group) {
         return row.group.name
@@ -401,17 +400,27 @@ export const createMessageColumns = ({
     header: "Message",
     cell: ({ row }) => {
       const m = row.original
-      // Disable editing if message is not pending OR if it's a predefined study message
-      const disabled = m.aggregated || m.status !== "pending" || (m.source === "study" && m.messageSource === "predefined")
+      // Custom messages (both manual and study) can be edited if pending
+      const canEdit = m.status === "pending" && !m.aggregated && !(m.source === "study" && m.messageSource === "predefined")
+      
       return (
         <div className="space-y-1 max-w-sm">
-          <EditableTextCell
-            value={m.message}
-            multiline
-            expandable
-            disabled={disabled}
-            onSave={async (next) => onUpdate(m, { message: next })}
-          />
+          <div className="flex items-start gap-2">
+            <div className="flex-1">
+              <ExpandableText text={m.message} />
+            </div>
+            {canEdit && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onEdit(m)}
+                className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
+                title="Edit message"
+              >
+                <Pencil className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
           {m.template && (
             <div className="text-xs text-blue-600">
               Template: {m.template.name}
@@ -426,13 +435,29 @@ export const createMessageColumns = ({
     header: "Scheduled For",
     cell: ({ row }) => {
       const m = row.original
-      const disabled = !isAdmin || m.aggregated || m.status !== "pending"
+      const canEdit = isAdmin && !m.aggregated && m.status === "pending"
+      const d = new Date(m.scheduledFor)
+      
       return (
-        <EditableDateTimeCell
-          ts={m.scheduledFor}
-          disabled={disabled}
-          onSave={async (nextTs) => onUpdate(m, { scheduledFor: nextTs })}
-        />
+        <div className="flex items-center gap-2">
+          <div>
+            <div>{d.toLocaleDateString()}</div>
+            <div className="text-muted-foreground text-sm">
+              {d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </div>
+          </div>
+          {canEdit && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onEdit(m)}
+              className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
+              title="Edit schedule"
+            >
+              <Pencil className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
       )
     },
   },
@@ -498,7 +523,9 @@ export const createMessageColumns = ({
       )
     },
   },
-  {
+  ...(
+    showActions
+      ? [{
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
@@ -547,5 +574,7 @@ export const createMessageColumns = ({
         </DropdownMenu>
       )
     },
-  },
+  }]
+      : []
+  ),
 ]

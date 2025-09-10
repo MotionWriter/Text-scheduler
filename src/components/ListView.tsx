@@ -129,7 +129,7 @@ export function ListView({ studyBookId, studyBookTitle, hasGroupSelected }: List
   }
 
   const defaultScheduleForLesson = (lesson: any) => {
-    const time = lesson?.defaultSendTime || "09:00"
+    const time = lesson?.defaultSendTime || "06:30"
     const base = lesson?.activeWeekStart ? new Date(lesson.activeWeekStart) : new Date()
     const local = new Date(base.getTime() - base.getTimezoneOffset() * 60000)
     const dateStr = local.toISOString().slice(0, 10)
@@ -221,7 +221,7 @@ export function ListView({ studyBookId, studyBookTitle, hasGroupSelected }: List
     
     setEditData(prev => ({
       ...prev,
-      [selectionId]: { date: dateStr, time: lesson?.defaultSendTime || "09:00" }
+      [selectionId]: { date: dateStr, time: lesson?.defaultSendTime || "06:30" }
     }))
     setEditingStates(prev => ({
       ...prev,
@@ -236,7 +236,7 @@ export function ListView({ studyBookId, studyBookTitle, hasGroupSelected }: List
     const lesson = lessonById[lessonId]
     const dateRange = getDateRangeForLesson(lesson)
     // Always use lesson's default time
-    const lessonTime = lesson?.defaultSendTime || "09:00"
+    const lessonTime = lesson?.defaultSendTime || "06:30"
     const ts = combineLocalTs(data.date, lessonTime)
     
     if ((dateRange.min && ts < dateRange.min) || (dateRange.max && ts > dateRange.max)) {
@@ -401,7 +401,7 @@ export function ListView({ studyBookId, studyBookTitle, hasGroupSelected }: List
                   </h3>
                   {start && end && (
                     <div className="text-sm text-gray-600 mt-1">
-                      Active week: {fmt(start)} - {fmt(end)} • Default time: {lesson.defaultSendTime || "09:00"}
+                      Active week: {fmt(start)} - {fmt(end)} • Default time: {lesson.defaultSendTime || "06:30"}
                     </div>
                   )}
                   <div className="text-sm text-gray-500 mt-1">
@@ -496,7 +496,7 @@ export function ListView({ studyBookId, studyBookTitle, hasGroupSelected }: List
                                         maxDate={getDateRangeForLesson(lesson).max}
                                       />
                                       <span className="text-sm text-gray-600">
-                                        at {lesson.defaultSendTime || "09:00"}
+                                        at {lesson.defaultSendTime || "06:30"}
                                       </span>
                                     </div>
                                     <div className="flex items-center gap-3">

@@ -145,7 +145,7 @@ export function KanbanBoard({ studyBookId, studyBookTitle, hasGroupSelected }: K
   }
 
   const defaultScheduleForLesson = (lesson: any) => {
-    const time = lesson?.defaultSendTime || "09:00"
+    const time = lesson?.defaultSendTime || "06:30"
     const base = lesson?.activeWeekStart ? new Date(lesson.activeWeekStart) : new Date()
     const local = new Date(base.getTime() - base.getTimezoneOffset() * 60000)
     const dateStr = local.toISOString().slice(0, 10)
@@ -237,7 +237,7 @@ export function KanbanBoard({ studyBookId, studyBookTitle, hasGroupSelected }: K
     
     setEditData(prev => ({
       ...prev,
-      [card.selectionId as string]: { date: dateStr, time: lesson?.defaultSendTime || "09:00" }
+      [card.selectionId as string]: { date: dateStr, time: lesson?.defaultSendTime || "06:30" }
     }))
     setEditingStates(prev => ({
       ...prev,
@@ -254,7 +254,7 @@ export function KanbanBoard({ studyBookId, studyBookTitle, hasGroupSelected }: K
     const lesson = lessonById[card.lessonId]
     const dateRange = getDateRangeForLesson(lesson)
     // Always use lesson's default time
-    const lessonTime = lesson?.defaultSendTime || "09:00"
+    const lessonTime = lesson?.defaultSendTime || "06:30"
     const ts = combineLocalTs(data.date, lessonTime)
     
     if ((dateRange.min && ts < dateRange.min) || (dateRange.max && ts > dateRange.max)) {
@@ -466,7 +466,7 @@ export function KanbanBoard({ studyBookId, studyBookTitle, hasGroupSelected }: K
                     ? `Lesson ${lesson.lessonNumber}: ${lesson.title}` 
                     : `Lesson ${lesson?.lessonNumber ?? ''}`
                 })()}
-                lessonDefaultTime={lessonById[activeCard.lessonId]?.defaultSendTime || "09:00"}
+                lessonDefaultTime={lessonById[activeCard.lessonId]?.defaultSendTime || "06:30"}
                 dateRange={getDateRangeForLesson(lessonById[activeCard.lessonId])}
                 isEditing={false}
                 onStartEdit={() => {}}

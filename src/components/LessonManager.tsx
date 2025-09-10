@@ -25,7 +25,7 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
     title: "",
     description: "",
     activeWeekStart: "",
-    defaultSendTime: "09:00",
+    defaultSendTime: "06:30",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,7 +61,7 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
       title: "",
       description: "",
       activeWeekStart: "",
-      defaultSendTime: "09:00",
+      defaultSendTime: "06:30",
     });
     setEditingLesson(null);
     setShowForm(false);
@@ -227,7 +227,7 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
                         title: lesson.title,
                         description: lesson.description || "",
                         activeWeekStart: lesson.activeWeekStart ? new Date(lesson.activeWeekStart - new Date(lesson.activeWeekStart).getTimezoneOffset()*60000).toISOString().slice(0,10) : "",
-                        defaultSendTime: lesson.defaultSendTime || "09:00",
+                        defaultSendTime: lesson.defaultSendTime || "06:30",
                       });
                       setShowForm(true);
                     }}
