@@ -72,8 +72,9 @@ export function GroupsTab() {
         toast.success("Group updated successfully");
       } else {
         await createGroup({
-          ...formData,
+          name: formData.name,
           description: formData.description || undefined,
+          // Don't pass color - let server choose next available color automatically
         });
         toast.success("Group created successfully");
       }

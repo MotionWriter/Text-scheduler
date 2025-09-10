@@ -52,7 +52,7 @@ export type ScheduledMessage = {
 
 interface MessageColumnsProps {
   onEdit: (message: ScheduledMessage) => void
-  onDelete: (message: ScheduledMessage) => void
+  onDelete: (message: ScheduledMessage, opts?: { confirmed?: boolean }) => void
   onDuplicate?: (message: ScheduledMessage) => void
   onUpdate: (row: ScheduledMessage, patch: Partial<Pick<ScheduledMessage, "message" | "scheduledFor" | "notes">>) => Promise<void>
 }
@@ -475,6 +475,27 @@ export const createMessageColumns = ({
     enableHiding: false,
     cell: ({ row }) => {
       const message = row.original
+      const [confirming, setConfirming] = React.useState(false)
+
+      if (confirming) {
+        return (
+          <div className="flex items-center justify-end gap-3">
+            <span className="text-red-600 font-medium">Delete:</span>
+            <button
+              className="text-red-600 hover:text-red-800"
+              onClick={(e) => { e.stopPropagation(); onDelete(message, { confirmed: true }); setConfirming(false); }}
+            >
+              Yes
+            </button>
+            <button
+              className="text-green-600 hover:text-green-800"
+              onClick={(e) => { e.stopPropagation(); setConfirming(false); }}
+            >
+              No
+            </button>
+          </div>
+        )
+      }
 
       return (
         <DropdownMenu>
@@ -495,10 +516,9 @@ export const createMessageColumns = ({
                 <DropdownMenuSeparator />
               </>
             )}
-            {/* Allow Delete for pending or failed messages, including aggregated group rows */}
             {(message.status === "pending" || message.status === "failed") && (
               <>
-                <DropdownMenuItem onClick={() => onDelete(message)}>
+                <DropdownMenuItem onClick={() => setConfirming(true)}>
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete
                 </DropdownMenuItem>
