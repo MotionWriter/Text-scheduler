@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { ContactsTab } from "./components/ContactsTab";
-import { GroupsTab } from "./components/GroupsTab";
 import { TemplatesTab } from "./components/TemplatesTab";
 import { StudyMessagesTab } from "./components/StudyMessagesTab";
 import { LessonContentTab } from "./components/LessonContentTab";
@@ -14,7 +13,7 @@ import { SetupTab } from "./components/SetupTab";
 import { ChevronsUpDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-type Tab = "messages" | "contacts" | "groups" | "templates" | "study-messages" | "lessons" | "delivery" | "api-keys";
+type Tab = "messages" | "contacts" | "templates" | "study-messages" | "lessons" | "delivery" | "api-keys";
 
 export function Dashboard() {
   // Priority: Study Messages
@@ -30,7 +29,6 @@ export function Dashboard() {
     ...((!isAdmin || testMode) ? [
       { id: "study-messages" as const, label: "Study Messages", icon: "📖" },
     ] : []),
-    { id: "groups" as const, label: "Groups", icon: "👨‍👩‍👧‍👦" },
     { id: "contacts" as const, label: "Contacts", icon: "👥" },
     { id: "messages" as const, label: "Scheduled Messages", icon: "📅" },
     ...(isAdmin && !testMode ? [
@@ -140,7 +138,6 @@ export function Dashboard() {
       <div className="mt-6">
         {activeTab === "messages" && <MessagesTab />}
         {activeTab === "contacts" && <ContactsTab />}
-        {activeTab === "groups" && <GroupsTab />}
         {activeTab === "templates" && !isAdmin && <TemplatesTab />}
         {activeTab === "study-messages" && (!isAdmin || testMode) && <StudyMessagesTab />}
         {activeTab === "lessons" && isAdmin && !testMode && <LessonContentTab />}

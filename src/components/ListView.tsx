@@ -391,7 +391,9 @@ export function ListView({ studyBookId, studyBookTitle, hasGroupSelected }: List
               {/* Lesson Header */}
               <button
                 onClick={() => toggleLessonExpansion(lesson._id)}
-                className="w-full p-4 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between text-left"
+                className={`w-full p-4 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between text-left ${
+                  isExpanded ? 'rounded-t-lg' : 'rounded-lg'
+                }`}
               >
                 <div>
                   <h3 className="font-semibold text-gray-900">
@@ -420,14 +422,17 @@ export function ListView({ studyBookId, studyBookTitle, hasGroupSelected }: List
 
               {/* Messages List */}
               {isExpanded && (
-                <div className="divide-y divide-gray-100">
-                  {lesson.messages.map((message: any) => {
+                <div className="divide-y divide-gray-100 rounded-b-lg overflow-hidden">
+                  {lesson.messages.map((message: any, index: number) => {
                     const isScheduled = scheduledMessageIds[message.source as keyof typeof scheduledMessageIds]?.has(message._id)
                     const selection = selectionByMessageId[message._id]
                     const isEditing = editingStates[selection?._id]
+                    const isLastMessage = index === lesson.messages.length - 1
 
                     return (
-                      <div key={message._id} className="p-4 bg-white hover:bg-gray-50 transition-colors">
+                      <div key={message._id} className={`p-4 bg-white hover:bg-gray-50 transition-colors ${
+                        isLastMessage ? 'rounded-b-lg' : ''
+                      }`}>
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0">
                             {(() => {

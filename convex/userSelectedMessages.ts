@@ -213,3 +213,18 @@ export const updateScheduling = mutation({
     });
   },
 });
+
+// Remove message selection entirely from user's schedule (does not affect predefined content)
+export const remove = mutation({
+  args: { id: v.id("userSelectedMessages") },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+
+    const selection = await ctx.db.get(args.id);
+    if (!selection || selection.userId !== user._id) {
+      throw new Error("Selection not found or access denied");
+    }
+
+    await ctx.db.delete(args.id);
+  },
+});

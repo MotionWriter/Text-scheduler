@@ -241,3 +241,22 @@ export const remove = mutation({
     await ctx.db.delete(args.id);
   },
 });
+
+// Bulk remove multiple scheduled messages (used for grouped rows representing many recipients)
+export const removeMany = mutation({
+  args: { ids: v.array(v.id("scheduledMessages")) },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    for (const id of args.ids) {
+      const m = await ctx.db.get(id);
+      if (m && m.userId === userId) {
+        await ctx.db.delete(id);
+      }
+      // If not found or not owned by user, skip silently to behave idempotently
+    }
+  },
+});

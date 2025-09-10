@@ -488,12 +488,19 @@ export const createMessageColumns = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            {/* Allow Edit for pending, non-aggregated messages only */}
             {message.status === "pending" && !message.aggregated && (
               <>
                 <DropdownMenuItem onClick={() => onEdit(message)}>
                   <Edit className="mr-2 h-4 w-4" />
                   Edit
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            {/* Allow Delete for pending or failed messages, including aggregated group rows */}
+            {(message.status === "pending" || message.status === "failed") && (
+              <>
                 <DropdownMenuItem onClick={() => onDelete(message)}>
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete

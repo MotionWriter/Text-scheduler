@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 // import { GroupComboBox } from "./ui/GroupComboBox";
 import { Badge } from "./ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AddGroupDialog } from "./AddGroupDialog";
 
 function normalizeUsDigits(value: string) {
   let d = value.replace(/\D/g, "");
@@ -31,6 +32,7 @@ export function ContactsTab() {
   const createContact = useMutation(api.contacts.create);
   const setSingleGroup = useMutation(api.groups.setContactToSingleGroup);
   const clearGroups = useMutation(api.groups.clearContactGroups);
+  const findOrCreateGroup = useMutation(api.groups.findOrCreate);
   const groups = useQuery(api.groups.list) || [];
   const createWithGroups = useMutation(api.contacts.createWithGroups);
   const updateContact = useMutation(api.contacts.update);
@@ -326,6 +328,32 @@ export function ContactsTab() {
     }
   };
 
+  // Add Group modal state
+  const [addGroupOpen, setAddGroupOpen] = useState(false);
+  const [addGroupForContact, setAddGroupForContact] = useState<Id<"contacts"> | null>(null);
+  const [addingGroup, setAddingGroup] = useState(false);
+
+  const openAddGroupDialog = (contactId: Id<"contacts">) => {
+    setAddGroupForContact(contactId);
+    setAddGroupOpen(true);
+  };
+
+  const submitAddGroup = async (name: string) => {
+    if (!addGroupForContact) return;
+    try {
+      setAddingGroup(true);
+      const groupId = await findOrCreateGroup({ name });
+      await setSingleGroup({ contactId: addGroupForContact, groupId });
+      toast.success(`Created group "${name}" and assigned contact`);
+      setAddGroupOpen(false);
+      setAddGroupForContact(null);
+    } catch (e) {
+      toast.error("Failed to create group");
+    } finally {
+      setAddingGroup(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -547,6 +575,10 @@ export function ContactsTab() {
                   <Select
                     value={contact.groups && contact.groups[0]?._id ? contact.groups[0]._id : "none"}
                     onValueChange={(value) => {
+                      if (value === "__add__") {
+                        openAddGroupDialog(contact._id as Id<"contacts">);
+                        return;
+                      }
                       if (value === "none") {
                         clearGroups({ contactId: contact._id as Id<"contacts"> })
                       } else {
@@ -558,12 +590,13 @@ export function ContactsTab() {
                       <SelectValue placeholder="Select a group" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">No Group</SelectItem>
                       {groups.map((g: any) => (
                         <SelectItem key={g._id} value={g._id}>
                           {g.name} ({g.memberCount} members)
                         </SelectItem>
                       ))}
+                      <SelectItem value="none">No Group</SelectItem>
+                      <SelectItem value="__add__">+ Add Group</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -624,6 +657,10 @@ export function ContactsTab() {
                         <Select
                           value={contact.groups && contact.groups[0]?._id ? contact.groups[0]._id : "none"}
                           onValueChange={(value) => {
+                            if (value === "__add__") {
+                              openAddGroupDialog(contact._id as Id<"contacts">);
+                              return;
+                            }
                             if (value === "none") {
                               clearGroups({ contactId: contact._id as Id<"contacts"> })
                             } else {
@@ -635,12 +672,13 @@ export function ContactsTab() {
                             <SelectValue placeholder="Select a group" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">No Group</SelectItem>
                             {groups.map((g: any) => (
                               <SelectItem key={g._id} value={g._id}>
                                 {g.name} ({g.memberCount} members)
                               </SelectItem>
                             ))}
+                            <SelectItem value="none">No Group</SelectItem>
+                            <SelectItem value="__add__">+ Add Group</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -656,6 +694,12 @@ export function ContactsTab() {
           </div>
         )}
       </div>
+      <AddGroupDialog
+        open={addGroupOpen}
+        onOpenChange={(o) => { setAddGroupOpen(o); if (!o) setAddGroupForContact(null); }}
+        onSubmit={submitAddGroup}
+        isSubmitting={addingGroup}
+      />
     </div>
   );
 }

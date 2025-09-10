@@ -140,7 +140,7 @@ export function StudyMessagesTab() {
 
       {activeView === "lessons" && selectedStudyBook && (
         <div className="space-y-4">
-          <div className="relative border rounded-lg p-3">
+          <div className="relative border rounded-lg p-3 bg-white">
 
             {/* Compact header inside table */}
             <div className="gap-2 mb-3 flex flex-col sm:grid sm:grid-cols-3 sm:items-center">

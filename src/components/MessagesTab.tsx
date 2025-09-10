@@ -16,6 +16,7 @@ export function MessagesTab() {
   const updateMessage = useMutation(api.scheduledMessages.update);
   const createForGroup = useMutation(api.scheduledMessages.createForGroup);
   const removeMessage = useMutation(api.scheduledMessages.remove);
+  const removeManyMessages = useMutation(api.scheduledMessages.removeMany);
   const removeUserSelected = useMutation(api.userSelectedMessages.remove);
   const createCustomMessage = useMutation(api.userCustomMessages.create);
 
@@ -29,18 +30,39 @@ export function MessagesTab() {
   };
 
   const handleDelete = async (message: ScheduledMessage) => {
-    if (confirm("Are you sure you want to delete this scheduled message?")) {
-      try {
-        if (message.source === "manual") {
+    if (message.status !== "pending" && message.status !== "failed") {
+      toast.error("Only pending or failed messages can be deleted");
+      return;
+    }
+
+    const count = message.aggregated && Array.isArray(message.messageIds)
+      ? message.messageIds.length
+      : 1;
+
+    const ok = confirm(
+      count > 1
+        ? `Delete this grouped scheduled message for ${count} recipients?`
+        : "Are you sure you want to delete this scheduled message?"
+    );
+    if (!ok) return;
+
+    try {
+      if (message.source === "manual") {
+        if (message.aggregated && Array.isArray(message.messageIds) && message.messageIds.length > 0) {
+          // Bulk delete all underlying scheduledMessages
+          await removeManyMessages({
+            ids: message.messageIds as unknown as Id<"scheduledMessages">[],
+          });
+        } else {
           await removeMessage({ id: message._id as Id<"scheduledMessages"> });
-        } else if (message.source === "study") {
-          // For study messages, we use the userSelectedMessages remove mutation
-          await removeUserSelected({ id: message._id as Id<"userSelectedMessages"> });
         }
-        toast.success("Scheduled message deleted successfully");
-      } catch (error) {
-        toast.error("Failed to delete scheduled message");
+      } else if (message.source === "study") {
+        // For study messages, we use the userSelectedMessages remove mutation
+        await removeUserSelected({ id: message._id as Id<"userSelectedMessages"> });
       }
+      toast.success("Scheduled message deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete scheduled message");
     }
   };
 
