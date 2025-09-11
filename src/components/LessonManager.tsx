@@ -45,13 +45,16 @@ export function LessonManager({ studyBookId, lessons, onSelectLesson, onBack }: 
           studyBookId,
           lessonNumber: formData.lessonNumber,
           title: formData.title,
-          description: formData.description,
+          description: formData.description || undefined,
+          activeWeekStart: formData.activeWeekStart ? new Date(formData.activeWeekStart).getTime() : undefined,
+          defaultSendTime: formData.defaultSendTime || undefined,
         });
         toast.success("Lesson created successfully");
       }
       resetForm();
-    } catch (error) {
-      toast.error("Failed to save lesson");
+    } catch (error: any) {
+      const msg = typeof error?.message === 'string' ? error.message : 'Failed to save lesson';
+      toast.error(msg);
     }
   };
 

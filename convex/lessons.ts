@@ -30,6 +30,8 @@ export const create = mutation({
     lessonNumber: v.number(),
     title: v.string(),
     description: v.optional(v.string()),
+    activeWeekStart: v.optional(v.number()),
+    defaultSendTime: v.optional(v.string()), // HH:mm
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
@@ -59,6 +61,8 @@ export const create = mutation({
       description: args.description,
       createdAt: Date.now(),
       isActive: true,
+      activeWeekStart: args.activeWeekStart,
+      defaultSendTime: args.defaultSendTime,
     });
   },
 });

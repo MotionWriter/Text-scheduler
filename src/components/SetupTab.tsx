@@ -38,7 +38,7 @@ export function SetupTab() {
   // Primary mobile CTA by step
   const getMobilePrimaryCta = () => {
     if (currentStep === 1) {
-      return { label: "Next", onClick: () => setCurrentStep(2), disabled: false } as const;
+      return { label: "Get Started", onClick: () => setCurrentStep(2), disabled: false } as const;
     }
     if (currentStep === 2) {
       return { label: "Download & Continue", onClick: downloadShortcut, disabled: false } as const;
@@ -77,17 +77,15 @@ export function SetupTab() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      {currentStep !== 3 && (
+      {currentStep === 1 && (
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
             Welcome to Message Scheduler! 📱
           </h1>
-          {currentStep === 1 && (
-            <p className="text-lg text-gray-600 mb-8">
-              To get started, you'll need to set up the Apple Shortcut on your iPhone. 
-              This allows you to send messages directly from your phone using your scheduled content.
-            </p>
-          )}
+          <p className="text-lg text-gray-600 mb-8">
+            To get started, you'll need to set up the Apple Shortcut on your iPhone. 
+            This allows you to send messages directly from your phone using your scheduled content.
+          </p>
         </div>
       )}
 
@@ -96,7 +94,7 @@ export function SetupTab() {
       {currentStep === 1 ? (
         <div className="text-center">
           <Button onClick={() => setCurrentStep(2)} className="hidden md:inline-flex px-8 h-11">
-            Next
+            Get Started
           </Button>
         </div>
       ) : (
@@ -143,14 +141,6 @@ export function SetupTab() {
 
         {currentStep === 4 && apiKey && (
           <div className="space-y-6">
-            <div className="text-center">
-              <div className="text-5xl sm:text-6xl mb-4">⚙️</div>
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Configure Your Shortcut</h2>
-              <p className="text-gray-600 max-w-2xl mx-auto">
-                Copy your API key below and paste it into your iPhone shortcut when prompted.
-              </p>
-            </div>
-
             <div className="bg-green-50 border border-green-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-green-800 mb-3">
                 Your secret password is ready!
