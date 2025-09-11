@@ -198,26 +198,22 @@ function EditableTextCell({
     autoFocus: true,
     value: draft,
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setDraft(e.target.value),
-    onBlur: commit,
+    onBlur: () => {
+      // Clicking out should NOT save. Revert and exit edit mode.
+      setDraft(value)
+      setEditing(false)
+    },
     onKeyDown: (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        if (multiline) {
-          // Shift+Enter inserts a newline; plain Enter saves
-          if (e.shiftKey) return
-          e.preventDefault()
-          void commit()
-        } else {
-          e.preventDefault()
-          void commit()
-        }
-      } else if ((e.key === 'Enter' && (e.metaKey || e.ctrlKey)) || (e.key === 's' && (e.metaKey || e.ctrlKey))) {
-        // Cmd/Ctrl+Enter or Cmd/Ctrl+S also save
+      if (e.key === 'Enter' && (e.metaKey || e.shiftKey)) {
+        // Save only with Cmd+Enter (mac) or Shift+Enter
         e.preventDefault()
         void commit()
       } else if (e.key === 'Escape') {
         setDraft(value)
         setEditing(false)
       }
+      // Plain Enter inserts newline in textarea and does nothing in input
+      // Cmd/Ctrl+S no longer triggers save per request
     },
     className: "w-full text-sm",
   }
