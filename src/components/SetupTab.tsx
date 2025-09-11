@@ -7,6 +7,7 @@ import { Button } from "../components/ui/button";
 export function SetupTab() {
   const apiKeys = useQuery(api.apiKeys.list) || [];
   const createApiKey = useMutation(api.apiKeys.create);
+  const rotateKey = useMutation(api.apiKeys.rotate);
   const [currentStep, setCurrentStep] = useState(1);
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [isCreatingApiKey, setIsCreatingApiKey] = useState(false);
@@ -14,12 +15,21 @@ export function SetupTab() {
   const handleCreateApiKey = async () => {
     setIsCreatingApiKey(true);
     try {
-      const result = await createApiKey({ name: "iPhone Shortcut Setup" });
-      setApiKey(result.apiKey);
-      setCurrentStep(3);
-      toast.success("Secret password created!");
+      if (apiKeys.length > 0) {
+        // Rotate the most relevant key (prefer an active one)
+        const existing = (apiKeys as any[]).find((k: any) => k.isActive) || apiKeys[0];
+        const res = await rotateKey({ fromKeyId: (existing as any)._id, name: `Rotated from ${(existing as any).name || "existing"} (Setup)` });
+        setApiKey(res.apiKey);
+        setCurrentStep(4);
+        toast.success("Secret password replaced! Update your Shortcut with the new one.");
+      } else {
+        const result = await createApiKey({ name: "iPhone Shortcut Setup" });
+        setApiKey(result.apiKey);
+        setCurrentStep(4);
+        toast.success("Secret password created!");
+      }
     } catch (error) {
-      toast.error("Failed to create secret password");
+      toast.error("Failed to create or rotate secret password");
     } finally {
       setIsCreatingApiKey(false);
     }
@@ -67,17 +77,19 @@ export function SetupTab() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Welcome to Message Scheduler! 📱
-        </h1>
-        {currentStep === 1 && (
-          <p className="text-lg text-gray-600 mb-8">
-            To get started, you'll need to set up the Apple Shortcut on your iPhone. 
-            This allows you to send messages directly from your phone using your scheduled content.
-          </p>
-        )}
-      </div>
+      {currentStep !== 3 && (
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            Welcome to Message Scheduler! 📱
+          </h1>
+          {currentStep === 1 && (
+            <p className="text-lg text-gray-600 mb-8">
+              To get started, you'll need to set up the Apple Shortcut on your iPhone. 
+              This allows you to send messages directly from your phone using your scheduled content.
+            </p>
+          )}
+        </div>
+      )}
 
 
       {/* Step Content */}
@@ -115,10 +127,10 @@ export function SetupTab() {
             {apiKeys.length > 0 && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <p className="text-blue-800 font-medium">
-                  You already have {apiKeys.length} secret password(s) created
+                  You already have {apiKeys.length} secret password(s).
                 </p>
                 <p className="text-blue-600 text-sm mt-1">
-                  You can create a new one for this setup or use an existing one
+                  We'll safely replace your old one with a new secret password.
                 </p>
               </div>
             )}
