@@ -205,8 +205,11 @@ function EditableTextCell({
       if (e.key === 'Enter' && (e.metaKey || e.shiftKey)) {
         // Save only with Cmd+Enter (mac) or Shift+Enter
         e.preventDefault()
+        e.stopPropagation()
         void commit()
       } else if (e.key === 'Escape') {
+        e.preventDefault()
+        e.stopPropagation()
         setDraft(value)
         setEditing(false)
       }
