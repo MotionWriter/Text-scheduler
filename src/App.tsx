@@ -5,6 +5,7 @@ import { SignOutButton } from "./SignOutButton";
 import { Toaster } from "sonner";
 import { Dashboard } from "./Dashboard";
 import { PasswordReset } from "./components/PasswordReset";
+import { useState, useEffect } from "react";
 
 export default function App() {
   // Check if this is the password reset page
@@ -38,8 +39,17 @@ export default function App() {
 
 function Content() {
   const loggedInUser = useQuery(api.auth.loggedInUser);
+  const [hasBeenAuthenticated, setHasBeenAuthenticated] = useState(false);
 
-  if (loggedInUser === undefined) {
+  // Track if user has been authenticated to prevent flicker
+  useEffect(() => {
+    if (loggedInUser !== undefined && loggedInUser !== null) {
+      setHasBeenAuthenticated(true);
+    }
+  }, [loggedInUser]);
+
+  // Show loading spinner during initial load or if we haven't been authenticated yet
+  if (loggedInUser === undefined && !hasBeenAuthenticated) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

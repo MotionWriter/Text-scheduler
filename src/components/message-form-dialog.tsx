@@ -274,11 +274,13 @@ export function MessageFormDialog({
                       </div>
                     )}
 
-                    {formData.lessonId && customMessageQuota && (
-                      <div className={customMessageQuota.canCreate ? "alert-info" : "alert-warning"}>
+                    {formData.lessonId && (
+                      <div className={customMessageQuota?.canCreate !== false ? "alert-info" : "alert-warning"}>
                         <div className="font-medium text-sm">Custom Message Quota</div>
                         <div className="text-sm mt-1">
-                          {customMessageQuota.canCreate ? (
+                          {customMessageQuota === undefined ? (
+                            "Loading quota information..."
+                          ) : customMessageQuota.canCreate ? (
                             `You can create ${customMessageQuota.remaining} more custom message${customMessageQuota.remaining !== 1 ? 's' : ''} for this lesson.`
                           ) : (
                             `You've reached the limit of 2 custom messages for this lesson.`

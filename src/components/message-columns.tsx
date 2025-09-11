@@ -375,7 +375,19 @@ export const createMessageColumns = ({
       const message = row.original
       return (
         <div className="flex items-center gap-2">
-          {message.source === 'study' ? (
+          {message.source === 'study' && message.messageSource === 'custom' ? (
+            <>
+              <div className="w-3 h-3 rounded-full bg-green-500" />
+              <div className="font-medium">
+                <div>Custom</div>
+                <div className="text-xs text-muted-foreground font-normal">
+                  {message.studyBook && message.lesson
+                    ? `${message.studyBook.title} - Lesson ${message.lesson.lessonNumber}`
+                    : 'Study Message'}
+                </div>
+              </div>
+            </>
+          ) : message.source === 'study' ? (
             <>
               <div className="w-3 h-3 rounded-full bg-blue-500" />
               <span className="font-medium">
@@ -387,7 +399,14 @@ export const createMessageColumns = ({
           ) : message.source === 'manual' ? (
             <>
               <div className="w-3 h-3 rounded-full bg-green-500" />
-              <span className="font-medium">Custom</span>
+              <div className="font-medium">
+                <div>Custom</div>
+                <div className="text-xs text-muted-foreground font-normal">
+                  {message.studyBook && message.lesson
+                    ? `${message.studyBook.title} - Lesson ${message.lesson.lessonNumber}`
+                    : 'Manual Message'}
+                </div>
+              </div>
             </>
           ) : (
             <>
@@ -404,8 +423,8 @@ export const createMessageColumns = ({
     header: "Message",
     cell: ({ row }) => {
       const m = row.original
-      // Edit only for custom (manual) pending messages
-      const canEdit = m.status === "pending" && m.source === "manual"
+      // Edit only for custom pending messages (manual or study-based custom)
+      const canEdit = m.status === "pending" && (m.source === "manual" || (m.source === "study" && m.messageSource === "custom"))
       return (
         <div className="space-y-1 max-w-sm">
           <EditableTextCell

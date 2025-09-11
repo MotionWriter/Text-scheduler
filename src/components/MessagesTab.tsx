@@ -7,6 +7,7 @@ import { MessagesDataTable } from "./messages-data-table";
 import { createMessageColumns, ScheduledMessage } from "./message-columns";
 import { MessageFormDialog, MessageFormData } from "./message-form-dialog";
 import { MessagesMobileList } from "./messages-mobile-list";
+import { ConfirmDialog } from "./ui/confirm-dialog";
 
 export function MessagesTab() {
   const messages = useQuery(api.allScheduledMessages.listAll) || [];
@@ -22,33 +23,31 @@ export function MessagesTab() {
   const removeManyMessages = useMutation(api.scheduledMessages.removeMany);
   const removeUserSelected = useMutation(api.userSelectedMessages.remove);
   const createCustomMessage = useMutation(api.userCustomMessages.create);
+  const selectCustomMessage = useMutation(api.userSelectedMessages.selectCustom);
 
   const [showDialog, setShowDialog] = useState(false);
   const [editingMessage, setEditingMessage] = useState<ScheduledMessage | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSent, setShowSent] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<{ show: boolean; message: ScheduledMessage | null }>({ show: false, message: null });
 
   const handleEdit = (message: ScheduledMessage) => {
     setEditingMessage(message);
     setShowDialog(true);
   };
 
-  const handleDelete = async (message: ScheduledMessage) => {
+  const handleDelete = (message: ScheduledMessage) => {
     if (message.status !== "pending" && message.status !== "failed") {
       toast.error("Only pending or failed messages can be deleted");
       return;
     }
 
-    const count = message.aggregated && Array.isArray(message.messageIds)
-      ? message.messageIds.length
-      : 1;
+    setConfirmDelete({ show: true, message });
+  };
 
-    const ok = confirm(
-      count > 1
-        ? `Delete this grouped scheduled message for ${count} recipients?`
-        : "Are you sure you want to delete this scheduled message?"
-    );
-    if (!ok) return;
+  const confirmDeleteMessage = async () => {
+    const message = confirmDelete.message;
+    if (!message) return;
 
     try {
       if (message.source === "manual") {
@@ -95,15 +94,19 @@ export function MessagesTab() {
         });
         toast.success("Message updated successfully");
       } else if (formData.messageType === "custom") {
-        // Schedule custom study message for delivery context
-        // For now, both Individual (per-member) and Group modes schedule per-member messages
-        await createForGroup({
-          groupId: formData.groupId as Id<"groups">,
-          message: formData.message,
-          scheduledFor: new Date(formData.scheduledFor).getTime(),
-          notes: formData.notes || undefined,
+        // Create custom message and select it for scheduling in the study system
+        const customMessageId = await createCustomMessage({
+          lessonId: formData.lessonId as Id<"lessons">,
+          content: formData.message,
         });
-        toast.success("Scheduled message to group");
+        
+        // Then create a user selection for this custom message with scheduling
+        await selectCustomMessage({
+          customMessageId,
+          scheduledAt: new Date(formData.scheduledFor).getTime(),
+        });
+        
+        toast.success("Custom study message created and scheduled");
       } else if (formData.messageType === "group") {
         // Legacy fallback path
         await createForGroup({
@@ -275,6 +278,21 @@ export function MessagesTab() {
         message={editingMessage}
         onSubmit={handleFormSubmit}
         isSubmitting={isSubmitting}
+      />
+
+      <ConfirmDialog
+        open={confirmDelete.show}
+        onOpenChange={(open) => setConfirmDelete({ show: open, message: null })}
+        title="Delete Scheduled Message"
+        description={
+          confirmDelete.message?.aggregated && Array.isArray(confirmDelete.message.messageIds)
+            ? `Delete this grouped scheduled message for ${confirmDelete.message.messageIds.length} recipients?`
+            : "Are you sure you want to delete this scheduled message?"
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+        onConfirm={confirmDeleteMessage}
       />
     </div>
   );
