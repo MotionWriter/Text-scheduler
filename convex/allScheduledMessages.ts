@@ -99,7 +99,7 @@ export const listAll = query({
       const lesson = await ctx.db.get(selection.lessonId);
       const studyBook = lesson ? await ctx.db.get(lesson.studyBookId) : null;
       
-      // Get the group preference for this study book
+      // Get the group preference for this study book, with lesson-level fallback
       let group = null;
       let groupId = null;
       if (studyBook) {
@@ -110,6 +110,16 @@ export const listAll = query({
         if (groupPref) {
           groupId = groupPref.groupId;
           group = await ctx.db.get(groupPref.groupId);
+        } else if (lesson) {
+          // Fallback to a per-lesson override if present
+          const lessonPref = await ctx.db
+            .query("lessonGroupPreferences")
+            .withIndex("by_user_lesson", (q) => q.eq("userId", userId).eq("lessonId", lesson._id))
+            .first();
+          if (lessonPref) {
+            groupId = lessonPref.groupId;
+            group = await ctx.db.get(lessonPref.groupId);
+          }
         }
       }
       

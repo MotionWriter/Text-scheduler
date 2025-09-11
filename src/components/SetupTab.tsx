@@ -141,15 +141,15 @@ export function SetupTab() {
 
         {currentStep === 4 && apiKey && (
           <div className="space-y-6">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-green-800 mb-3">
+            <div className="space-y-4">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                 Your secret password is ready!
-              </h3>
-              <p className="text-green-700 mb-4">
+              </h2>
+              <p className="text-gray-700">
                 Copy this secret password and paste it into your Apple Shortcut:
               </p>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-4">
-                <code className="bg-white px-3 py-2 rounded border flex-1 font-mono text-sm break-all">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-2">
+                <code className="bg-gray-50 px-3 py-2 rounded border flex-1 font-mono text-sm break-all">
                   {apiKey}
                 </code>
                 <Button variant="secondary" onClick={() => copyToClipboard(apiKey)} className="w-full sm:w-auto">
@@ -157,8 +157,8 @@ export function SetupTab() {
                 </Button>
               </div>
               
-              <div className="space-y-3 text-sm text-green-800">
-                <p><strong>Instructions:</strong></p>
+              <div className="space-y-2 text-sm text-gray-700">
+                <p className="font-medium">Instructions:</p>
                 <ol className="list-decimal list-inside space-y-1 ml-4">
                   <li>Open the Message Scheduler shortcut on your iPhone</li>
                   <li>When prompted for your secret password, paste the value above</li>
