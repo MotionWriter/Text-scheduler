@@ -159,9 +159,7 @@ function EditableTextCell({
   React.useEffect(() => setDraft(value), [value])
 
   const commit = async () => {
-    if (draft !== value) {
-      await onSave(draft)
-    }
+    await onSave(draft)
     setEditing(false)
   }
 
