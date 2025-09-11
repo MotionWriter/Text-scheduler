@@ -200,11 +200,18 @@ function EditableTextCell({
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setDraft(e.target.value),
     onBlur: commit,
     onKeyDown: (e: React.KeyboardEvent) => {
-      if (
-        e.key === 'Enter' && (
-          !multiline || (multiline && (e.metaKey || e.ctrlKey || e.shiftKey))
-        )
-      ) {
+      if (e.key === 'Enter') {
+        if (multiline) {
+          // Shift+Enter inserts a newline; plain Enter saves
+          if (e.shiftKey) return
+          e.preventDefault()
+          void commit()
+        } else {
+          e.preventDefault()
+          void commit()
+        }
+      } else if ((e.key === 'Enter' && (e.metaKey || e.ctrlKey)) || (e.key === 's' && (e.metaKey || e.ctrlKey))) {
+        // Cmd/Ctrl+Enter or Cmd/Ctrl+S also save
         e.preventDefault()
         void commit()
       } else if (e.key === 'Escape') {

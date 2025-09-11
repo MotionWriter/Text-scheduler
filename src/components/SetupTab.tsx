@@ -81,15 +81,14 @@ export function SetupTab() {
 
 
       {/* Step Content */}
+      {currentStep === 1 ? (
+        <div className="text-center">
+          <Button onClick={() => setCurrentStep(2)} className="hidden md:inline-flex px-8 h-11">
+            Next
+          </Button>
+        </div>
+      ) : (
       <div className="bg-white rounded-lg shadow-sm border p-6 sm:p-8">
-        {currentStep === 1 && (
-          <div className="text-center space-y-6">
-            <div className="text-5xl sm:text-6xl mb-4">📱</div>
-            <Button onClick={() => setCurrentStep(2)} className="hidden md:inline-flex px-8 h-11">
-              Next
-            </Button>
-          </div>
-        )}
 
         {currentStep === 2 && (
           <div className="text-center space-y-6">
@@ -209,8 +208,9 @@ export function SetupTab() {
           </div>
         )}
       </div>
+      )}
 
-      {/* Sticky mobile CTA footer */}
+      {/* Sticky mobile CTA footer */
       <MobileStickyCtas 
         currentStep={currentStep} 
         canGoBack={currentStep > 1 && !apiKey} 
