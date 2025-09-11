@@ -222,7 +222,7 @@ export function SetupTab() {
       </div>
       )}
 
-      {/* Sticky mobile CTA footer */
+      {/* Sticky mobile CTA footer */}
       <MobileStickyCtas 
         currentStep={currentStep} 
         canGoBack={currentStep > 1 && !apiKey} 
