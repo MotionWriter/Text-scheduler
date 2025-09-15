@@ -37,7 +37,11 @@ export function SignInForm() {
                 setFlow("signIn");
               })
               .catch((error) => {
-                toast.error("Failed to send password reset email.");
+                if (error.message.includes("UseGoogleSignIn")) {
+                  toast.error("This email is registered via Google. Please use \"Continue with Google\" to sign in.");
+                } else {
+                  toast.error("Failed to send password reset email.");
+                }
                 console.error(error);
               })
               .finally(() => {
@@ -77,8 +81,12 @@ export function SignInForm() {
             formData.set("flow", flow);
             void signIn("password", formData).catch((error) => {
               let toastTitle = "";
-              if (error.message.includes("Invalid password")) {
+              if (error.message.includes("UseGoogleSignIn")) {
+                toastTitle = "This email is registered via Google. Please use \"Continue with Google\".";
+              } else if (error.message.includes("Invalid password")) {
                 toastTitle = "Invalid password. Please try again.";
+              } else if (error.message.includes("Invalid credentials")) {
+                toastTitle = "We couldn't find a matching password account. If you signed up with Google, use \"Continue with Google\".";
               } else {
                 toastTitle =
                   flow === "signIn"
