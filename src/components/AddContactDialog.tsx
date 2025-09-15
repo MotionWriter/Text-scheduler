@@ -52,6 +52,8 @@ export function AddContactDialog({ open, onOpenChange }: Props) {
   const [selectedGroupId, setSelectedGroupId] = useState<string>("none");
   // Keep track of a newly created group so it's immediately selectable/displayed
   const [newlyCreatedGroup, setNewlyCreatedGroup] = useState<{ _id: string; name: string } | null>(null);
+  // Track pending group selection to handle async state updates
+  const [pendingGroupSelection, setPendingGroupSelection] = useState<string | null>(null);
 
   const [creating, setCreating] = useState(false);
 
@@ -66,8 +68,17 @@ export function AddContactDialog({ open, onOpenChange }: Props) {
       setNotes("");
       setSelectedGroupId("none");
       setNewlyCreatedGroup(null);
+      setPendingGroupSelection(null);
     }
   }, [open]);
+
+  // Handle pending group selection after the group has been added to the options
+  useEffect(() => {
+    if (pendingGroupSelection && allGroups.some(g => g._id === pendingGroupSelection)) {
+      setSelectedGroupId(pendingGroupSelection);
+      setPendingGroupSelection(null);
+    }
+  }, [pendingGroupSelection, allGroups]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,9 +127,10 @@ export function AddContactDialog({ open, onOpenChange }: Props) {
     try {
       const groupId = await findOrCreateGroup({ name });
       const idStr = groupId as unknown as string;
-      // Set the newly created group first, then update the selected value
+      // First add the group to the options list
       setNewlyCreatedGroup({ _id: idStr, name });
-      setSelectedGroupId(idStr);
+      // Then set up pending selection - useEffect will handle the actual selection
+      setPendingGroupSelection(idStr);
       setAddGroupOpen(false);
       toast.success(`Created group "${name}"`);
     } catch (e) {
