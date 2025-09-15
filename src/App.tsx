@@ -9,8 +9,9 @@ import { useState, useEffect } from "react";
 
 export default function App() {
   // Check if this is the password reset page
+  const search = window.location.search;
   const isPasswordReset = window.location.pathname === '/reset-password' || 
-                          window.location.search.includes('token=');
+                          search.includes('token=') || search.includes('code=');
 
   if (isPasswordReset) {
     return (

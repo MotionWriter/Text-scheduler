@@ -6,16 +6,19 @@ import { toast } from "sonner";
 export function PasswordReset() {
   const { signIn } = useAuthActions();
   const [submitting, setSubmitting] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
+  const [code, setCode] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    // Get token from URL parameters
+    // Get code (or legacy token) and email from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
-    const tokenParam = urlParams.get('token');
-    setToken(tokenParam);
+    const codeParam = urlParams.get('code') ?? urlParams.get('token');
+    const emailParam = urlParams.get('email');
+    setCode(codeParam);
+    setEmail(emailParam);
   }, []);
 
-  if (!token) {
+  if (!code || !email) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
@@ -48,10 +51,30 @@ export function PasswordReset() {
           onSubmit={(e) => {
             e.preventDefault();
             setSubmitting(true);
-            const formData = new FormData(e.target as HTMLFormElement);
-            formData.set("flow", "reset-password");
-            formData.set("token", token);
-            
+            const form = e.target as HTMLFormElement;
+            const formData = new FormData(form);
+            const newPassword = (formData.get("newPassword") as string) ?? "";
+            const confirmPassword = (formData.get("confirmPassword") as string) ?? "";
+
+            if (newPassword !== confirmPassword) {
+              toast.error("Passwords do not match.");
+              setSubmitting(false);
+              return;
+            }
+            if (newPassword.length < 8) {
+              toast.error("Password must be at least 8 characters long.");
+              setSubmitting(false);
+              return;
+            }
+
+            formData.set("flow", "reset-verification");
+            formData.set("code", code);
+            formData.set("email", email);
+            formData.set("newPassword", newPassword);
+
+            // Do not send confirmPassword to the server
+            formData.delete("confirmPassword");
+
             void signIn("password", formData)
               .then(() => {
                 toast.success("Password reset successfully! You are now signed in.");
@@ -67,14 +90,16 @@ export function PasswordReset() {
               });
           }}
         >
+          <input type="hidden" name="email" value={email ?? ""} />
+          <input type="hidden" name="code" value={code ?? ""} />
           <div>
             <input
               className="auth-input-field w-full"
               type="password"
-              name="password"
+              name="newPassword"
               placeholder="New Password"
               required
-              minLength={6}
+              minLength={8}
             />
           </div>
           <div>
@@ -84,7 +109,7 @@ export function PasswordReset() {
               name="confirmPassword"
               placeholder="Confirm New Password"
               required
-              minLength={6}
+              minLength={8}
             />
           </div>
           <div>
