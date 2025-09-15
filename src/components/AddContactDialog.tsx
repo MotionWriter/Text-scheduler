@@ -72,6 +72,18 @@ export function AddContactDialog({ open, onOpenChange }: Props) {
     }
   }, [open]);
 
+  // Create a combined list of all available groups including newly created ones
+  const allGroups = useMemo(() => {
+    const groupsMap = new Map();
+    // Add server groups
+    groups.forEach((g: any) => groupsMap.set(g._id, g));
+    // Add newly created group if it doesn't exist in server groups yet
+    if (newlyCreatedGroup && !groupsMap.has(newlyCreatedGroup._id)) {
+      groupsMap.set(newlyCreatedGroup._id, newlyCreatedGroup);
+    }
+    return Array.from(groupsMap.values());
+  }, [groups, newlyCreatedGroup]);
+
   // Handle pending group selection after the group has been added to the options
   useEffect(() => {
     if (pendingGroupSelection && allGroups.some(g => g._id === pendingGroupSelection)) {
@@ -103,17 +115,6 @@ export function AddContactDialog({ open, onOpenChange }: Props) {
     }
   };
 
-  // Create a combined list of all available groups including newly created ones
-  const allGroups = useMemo(() => {
-    const groupsMap = new Map();
-    // Add server groups
-    groups.forEach((g: any) => groupsMap.set(g._id, g));
-    // Add newly created group if it doesn't exist in server groups yet
-    if (newlyCreatedGroup && !groupsMap.has(newlyCreatedGroup._id)) {
-      groupsMap.set(newlyCreatedGroup._id, newlyCreatedGroup);
-    }
-    return Array.from(groupsMap.values());
-  }, [groups, newlyCreatedGroup]);
 
   const onSelectGroup = async (value: string) => {
     if (value === "__add__") {
