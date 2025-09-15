@@ -8,8 +8,20 @@ export function SignInForm() {
   const [flow, setFlow] = useState<"signIn" | "signUp" | "forgotPassword">("signIn");
   const [submitting, setSubmitting] = useState(false);
 
+  // Surface Auth provider error codes in the UI (e.g. OAuthAccountNotLinked)
+  const error = new URLSearchParams(window.location.search).get("error");
+
   return (
     <div className="w-full max-w-md mx-auto space-y-4">
+      {error && (
+        <div className="card border-red-200">
+          <div className="card-body text-sm text-red-700">
+            {error === "OAuthAccountNotLinked"
+              ? "This email is already registered with a password. Sign in with your password, or we can link Google to your account."
+              : `Sign-in error: ${error}`}
+          </div>
+        </div>
+      )}
       {flow === "forgotPassword" ? (
         <div className="card">
         <form
@@ -123,6 +135,24 @@ export function SignInForm() {
       </form>
       </div>
       )}
+
+      {/* OAuth providers */}
+      <div className="card">
+        <div className="card-body flex flex-col gap-3">
+          <div className="relative text-center">
+            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-px bg-border" />
+            <span className="relative bg-white px-3 text-xs text-muted-foreground">Or continue with</span>
+          </div>
+          <button
+            type="button"
+            className="auth-button"
+            onClick={() => void signIn("google")}
+          >
+            Continue with Google
+          </button>
+        </div>
+      </div>
+      
     </div>
   );
 }

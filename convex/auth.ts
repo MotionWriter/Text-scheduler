@@ -1,6 +1,7 @@
 import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { query } from "./_generated/server";
+import Google from "@auth/core/providers/google";
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
@@ -57,7 +58,9 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
           return response.json();
         },
       },
-    })
+    }),
+    // Allow linking Google to an existing account with the same email
+    Google({ allowDangerousEmailAccountLinking: true }),
   ],
 });
 
