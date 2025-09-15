@@ -50,6 +50,8 @@ export function AddContactDialog({ open, onOpenChange }: Props) {
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
   const [selectedGroupId, setSelectedGroupId] = useState<string>("none");
+  // Keep track of a newly created group so it's immediately selectable/displayed
+  const [newlyCreatedGroup, setNewlyCreatedGroup] = useState<{ _id: string; name: string } | null>(null);
 
   const [creating, setCreating] = useState(false);
 
@@ -63,6 +65,7 @@ export function AddContactDialog({ open, onOpenChange }: Props) {
       setEmail("");
       setNotes("");
       setSelectedGroupId("none");
+      setNewlyCreatedGroup(null);
     }
   }, [open]);
 
@@ -89,6 +92,18 @@ export function AddContactDialog({ open, onOpenChange }: Props) {
     }
   };
 
+  // Create a combined list of all available groups including newly created ones
+  const allGroups = useMemo(() => {
+    const groupsMap = new Map();
+    // Add server groups
+    groups.forEach((g: any) => groupsMap.set(g._id, g));
+    // Add newly created group if it doesn't exist in server groups yet
+    if (newlyCreatedGroup && !groupsMap.has(newlyCreatedGroup._id)) {
+      groupsMap.set(newlyCreatedGroup._id, newlyCreatedGroup);
+    }
+    return Array.from(groupsMap.values());
+  }, [groups, newlyCreatedGroup]);
+
   const onSelectGroup = async (value: string) => {
     if (value === "__add__") {
       setAddGroupOpen(true);
@@ -100,7 +115,10 @@ export function AddContactDialog({ open, onOpenChange }: Props) {
   const submitAddGroup = async (name: string) => {
     try {
       const groupId = await findOrCreateGroup({ name });
-      setSelectedGroupId(groupId as unknown as string);
+      const idStr = groupId as unknown as string;
+      // Set the newly created group first, then update the selected value
+      setNewlyCreatedGroup({ _id: idStr, name });
+      setSelectedGroupId(idStr);
       setAddGroupOpen(false);
       toast.success(`Created group "${name}"`);
     } catch (e) {
@@ -148,7 +166,8 @@ export function AddContactDialog({ open, onOpenChange }: Props) {
                     <SelectValue placeholder="Select group" />
                   </SelectTrigger>
                   <SelectContent>
-                    {groups.map((g: any) => (
+                    {/* Render all groups including newly created ones */}
+                    {allGroups.map((g: any) => (
                       <SelectItem key={g._id} value={g._id}>{g.name}</SelectItem>
                     ))}
                     <SelectItem value="none">No Group</SelectItem>
