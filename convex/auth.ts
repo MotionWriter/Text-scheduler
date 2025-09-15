@@ -9,31 +9,6 @@ const RESEND_FROM = process.env.RESEND_FROM ?? "ryan@rplummer.com";
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
     Password({
-      // Show a helpful error if the user has a Google-only account
-      profile: async (params, ctx) => {
-        const emailInput = (params.email as string | undefined) ?? "";
-        const email = emailInput.trim().toLowerCase();
-
-        // Only guard on signIn and reset flows; allow signUp to proceed
-        if (email && (params.flow === "signIn" || params.flow === "reset")) {
-          // Find user by email
-          const user = await ctx.db
-            .query("users")
-            .withIndex("email", (q) => q.eq("email", email))
-            .unique();
-
-          if (user) {
-            const accounts = await ctx.db.query("authAccounts").collect();
-            const userAccounts = accounts.filter((a: any) => a.userId === user._id);
-            const hasGoogle = userAccounts.some((a: any) => a.provider === "google");
-            const hasPassword = userAccounts.some((a: any) => a.provider === "password");
-            if (hasGoogle && !hasPassword) {
-              throw new Error("UseGoogleSignIn");
-            }
-          }
-        }
-        return { email } as any;
-      },
       reset: {
         id: "resend",
         type: "email",

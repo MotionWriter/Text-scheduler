@@ -2,9 +2,12 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useConvex } from "convex/react";
+import { api } from "../convex/_generated/api";
 
 export function SignInForm() {
   const { signIn } = useAuthActions();
+  const convex = useConvex();
   const [flow, setFlow] = useState<"signIn" | "signUp" | "forgotPassword">("signIn");
   const [submitting, setSubmitting] = useState(false);
 
@@ -36,12 +39,21 @@ export function SignInForm() {
                 toast.success("Password reset email sent! Check your inbox.");
                 setFlow("signIn");
               })
-              .catch((error) => {
-                if (error.message.includes("UseGoogleSignIn")) {
-                  toast.error("This email is registered via Google. Please use \"Continue with Google\" to sign in.");
-                } else {
-                  toast.error("Failed to send password reset email.");
-                }
+              .catch(async (error) => {
+                const email = formData.get("email") as string;
+                try {
+                  const result = await convex.query(
+                    api.authHelpers.checkAuthProvidersForEmail,
+                    { email }
+                  );
+                  if (result.exists && result.hasGoogle && !result.hasPassword) {
+                    toast.error(
+                      "This email is registered via Google. Please use \"Continue with Google\" to sign in."
+                    );
+                    return;
+                  }
+                } catch (e) {}
+                toast.error("Failed to send password reset email.");
                 console.error(error);
               })
               .finally(() => {
@@ -79,15 +91,32 @@ export function SignInForm() {
             setSubmitting(true);
             const formData = new FormData(e.target as HTMLFormElement);
             formData.set("flow", flow);
-            void signIn("password", formData).catch((error) => {
+            void signIn("password", formData).catch(async (error) => {
               let toastTitle = "";
-              if (error.message.includes("UseGoogleSignIn")) {
-                toastTitle = "This email is registered via Google. Please use \"Continue with Google\".";
-              } else if (error.message.includes("Invalid password")) {
-                toastTitle = "Invalid password. Please try again.";
-              } else if (error.message.includes("Invalid credentials")) {
-                toastTitle = "We couldn't find a matching password account. If you signed up with Google, use \"Continue with Google\".";
-              } else {
+              const email = formData.get("email") as string;
+              // If password sign-in failed, check if this email has Google-only auth
+              if (
+                error.message.includes("Invalid credentials") ||
+                error.message.includes("Invalid password")
+              ) {
+                try {
+                  const result = await convex.query(
+                    api.authHelpers.checkAuthProvidersForEmail,
+                    { email }
+                  );
+                  if (result.exists && result.hasGoogle && !result.hasPassword) {
+                    toastTitle =
+                      "This email is registered via Google. Please use \"Continue with Google\".";
+                    toast.error(toastTitle);
+                    setSubmitting(false);
+                    return;
+                  }
+                } catch (e) {
+                  // fallthrough to generic handling
+                }
+              }
+
+              if (!toastTitle) {
                 toastTitle =
                   flow === "signIn"
                     ? "Could not sign in, did you mean to sign up?"
