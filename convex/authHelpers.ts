@@ -14,7 +14,7 @@ export const checkAuthProvidersForEmail = query({
     // Query accounts for this user
     const accounts = await ctx.db
       .query("authAccounts")
-      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .withIndex("userIdAndProvider", (q) => q.eq("userId", user._id))
       .collect();
 
     const hasGoogle = accounts.some((a: any) => a.provider === "google");
