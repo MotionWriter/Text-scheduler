@@ -80,10 +80,8 @@ export function MessageFormDialog({
     formData.studyBookId ? { studyBookId: formData.studyBookId as Id<"studyBooks"> } : "skip",
   ) || []
 
-  const customMessageQuota = useQuery(
-    api.userCustomMessages.getCountForLesson,
-    formData.lessonId ? { lessonId: formData.lessonId as Id<"lessons"> } : "skip",
-  )
+  // Quota does not apply in this dialog (messages are scheduled directly to a group)
+  const customMessageQuota = undefined as unknown as { canCreate: boolean; remaining: number } | undefined
   
   // Derive selected lesson and allowed date range (Thu prior -> Sun of active week)
   const selectedLesson = lessons.find((l: any) => l._id === (formData.lessonId as any))
@@ -274,20 +272,7 @@ export function MessageFormDialog({
                       </div>
                     )}
 
-                    {formData.lessonId && (
-                      <div className={customMessageQuota?.canCreate !== false ? "alert-info" : "alert-warning"}>
-                        <div className="font-medium text-sm">Custom Message Quota</div>
-                        <div className="text-sm mt-1">
-                          {customMessageQuota === undefined ? (
-                            "Loading quota information..."
-                          ) : customMessageQuota.canCreate ? (
-                            `You can create ${customMessageQuota.remaining} more custom message${customMessageQuota.remaining !== 1 ? 's' : ''} for this lesson.`
-                          ) : (
-                            `You've reached the limit of 2 custom messages for this lesson.`
-                          )}
-                        </div>
-                      </div>
-                    )}
+                    {/* Quota panel removed for dialog-created messages */}
               </>
             )}
             
@@ -372,7 +357,7 @@ export function MessageFormDialog({
                 : "Enter your message..."
               }
               required
-              disabled={messageType === "custom" && customMessageQuota && !customMessageQuota.canCreate}
+              
               className={`${
                 messageType === "custom" && formData.message.length > 280 
                   ? "border-red-300 focus:border-red-500" 
@@ -403,7 +388,6 @@ export function MessageFormDialog({
                   !formData.lessonId ||
                   !formData.groupId ||
                   !formData.scheduledFor ||
-                  !customMessageQuota?.canCreate || 
                   formData.message.length > 280 ||
                   formData.message.trim().length === 0
                 ))

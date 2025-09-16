@@ -97,41 +97,16 @@ export function MessagesTab() {
         });
         toast.success("Message updated successfully");
       } else if (formData.messageType === "custom") {
-        // Create custom message and select it for scheduling in the study system
-        const customMessageId = await createCustomMessage({
-          lessonId: formData.lessonId as Id<"lessons">,
-          content: formData.message,
-        });
-
-        // If the user chose a group in the dialog, persist it as their preference
-        // so production can resolve the group for study messages.
-        if (formData.groupId) {
-          try {
-            if (formData.studyBookId) {
-              await setStudyGroupPref({
-                studyBookId: formData.studyBookId as Id<"studyBooks">,
-                groupId: formData.groupId as Id<"groups">,
-              });
-            }
-            // Also set a lesson-level preference to be explicit for this lesson
-            await setLessonGroupPref({
-              lessonId: formData.lessonId as Id<"lessons">,
-              groupId: formData.groupId as Id<"groups">,
-            });
-          } catch (e) {
-            // Non-blocking: continue scheduling even if preference write fails
-            console.error("Failed to persist study/lesson group preference", e);
-            toast.error("Saved message, but couldn’t save your group preference. Please set it in Study Messages → Lessons header.")
-          }
-        }
-        
-        // Then create a user selection for this custom message with scheduling
-        await selectCustomMessage({
-          customMessageId,
-          scheduledAt: new Date(formData.scheduledFor).getTime(),
-        });
-        
-        toast.success("Custom study message created and scheduled");
+        // Direct-to-group behavior: do NOT create lesson-scoped custom messages.
+        // Create aggregated scheduledMessages tied to the selected group.
+        await createForGroup({
+          groupId: formData.groupId as Id<"groups">,
+          message: formData.message,
+          scheduledFor: new Date(formData.scheduledFor).getTime(),
+          notes: formData.notes || undefined,
+          category: 'study', // keep category for context if desired
+        } as any);
+        toast.success("Messages scheduled for all group members");
       } else if (formData.messageType === "group") {
         // Legacy fallback path
         await createForGroup({
