@@ -121,6 +121,7 @@ export function MessagesTab() {
           } catch (e) {
             // Non-blocking: continue scheduling even if preference write fails
             console.error("Failed to persist study/lesson group preference", e);
+            toast.error("Saved message, but couldn’t save your group preference. Please set it in Study Messages → Lessons header.")
           }
         }
         
