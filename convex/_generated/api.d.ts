@@ -23,6 +23,7 @@ import type * as api_ from "../api.js";
 import type * as apiAuth from "../apiAuth.js";
 import type * as apiKeys from "../apiKeys.js";
 import type * as auth from "../auth.js";
+import type * as authHelpers from "../authHelpers.js";
 import type * as contacts from "../contacts.js";
 import type * as deliveryTracking from "../deliveryTracking.js";
 import type * as groups from "../groups.js";
@@ -67,6 +68,7 @@ declare const fullApi: ApiFromModules<{
   apiAuth: typeof apiAuth;
   apiKeys: typeof apiKeys;
   auth: typeof auth;
+  authHelpers: typeof authHelpers;
   contacts: typeof contacts;
   deliveryTracking: typeof deliveryTracking;
   groups: typeof groups;

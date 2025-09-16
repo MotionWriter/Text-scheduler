@@ -24,6 +24,9 @@ export function MessagesTab() {
   const removeUserSelected = useMutation(api.userSelectedMessages.remove);
   const createCustomMessage = useMutation(api.userCustomMessages.create);
   const selectCustomMessage = useMutation(api.userSelectedMessages.selectCustom);
+  // Persist study/lesson group preferences so study messages resolve to a group in lists
+  const setStudyGroupPref = useMutation(api.studyGroupPrefs.setForStudy);
+  const setLessonGroupPref = useMutation(api.lessonGroupPrefs.setForLesson);
 
   const [showDialog, setShowDialog] = useState(false);
   const [editingMessage, setEditingMessage] = useState<ScheduledMessage | null>(null);
@@ -99,6 +102,27 @@ export function MessagesTab() {
           lessonId: formData.lessonId as Id<"lessons">,
           content: formData.message,
         });
+
+        // If the user chose a group in the dialog, persist it as their preference
+        // so production can resolve the group for study messages.
+        if (formData.groupId) {
+          try {
+            if (formData.studyBookId) {
+              await setStudyGroupPref({
+                studyBookId: formData.studyBookId as Id<"studyBooks">,
+                groupId: formData.groupId as Id<"groups">,
+              });
+            }
+            // Also set a lesson-level preference to be explicit for this lesson
+            await setLessonGroupPref({
+              lessonId: formData.lessonId as Id<"lessons">,
+              groupId: formData.groupId as Id<"groups">,
+            });
+          } catch (e) {
+            // Non-blocking: continue scheduling even if preference write fails
+            console.error("Failed to persist study/lesson group preference", e);
+          }
+        }
         
         // Then create a user selection for this custom message with scheduling
         await selectCustomMessage({
