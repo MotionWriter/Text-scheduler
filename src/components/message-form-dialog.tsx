@@ -169,6 +169,8 @@ export function MessageFormDialog({
 
 
   const isEditing = !!message
+  // Only allow editing copy for custom messages. Predefined study messages are date-only.
+  const isPredefinedStudy = !!message && message.source === "study" && message.messageSource !== "custom"
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -178,8 +180,10 @@ export function MessageFormDialog({
             {isEditing ? "Edit Scheduled Message" : "Schedule New Message"}
           </DialogTitle>
           <DialogDescription>
-            {isEditing 
-              ? "Update the details of your scheduled message."
+            {isEditing
+              ? (isPredefinedStudy
+                  ? "Update the scheduled date and time. Message content is locked for predefined messages."
+                  : "Update the details of your scheduled message.")
               : "Create a new scheduled message to be sent at a specific time."
             }
           </DialogDescription>
@@ -336,40 +340,40 @@ export function MessageFormDialog({
               </div>
             </div>
           </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label htmlFor="message">Message *</Label>
-              {messageType === "custom" && (
-                <div className={`text-sm ${
-                  formData.message.length > 280 ? "text-red-600" : "text-gray-500"
-                }`}>
-                  {formData.message.length}/280
+          {!(isEditing && isPredefinedStudy) && (
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="message">Message *</Label>
+                {messageType === "custom" && (
+                  <div className={`text-sm ${
+                    formData.message.length > 280 ? "text-red-600" : "text-gray-500"
+                  }`}>
+                    {formData.message.length}/280
+                  </div>
+                )}
+              </div>
+              <Textarea
+                rows={4}
+                value={formData.message}
+                onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+                placeholder={messageType === "custom" 
+                  ? "Enter your custom message content (280 characters max)..." 
+                  : "Enter your message..."
+                }
+                required
+                className={`${
+                  messageType === "custom" && formData.message.length > 280 
+                    ? "border-red-300 focus:border-red-500" 
+                    : ""
+                }`}
+              />
+              {messageType === "custom" && formData.message.length > 280 && (
+                <div className="text-sm text-red-600">
+                  Message exceeds 280 character limit
                 </div>
               )}
             </div>
-            <Textarea
-              rows={4}
-              value={formData.message}
-              onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
-              placeholder={messageType === "custom" 
-                ? "Enter your custom message content (280 characters max)..." 
-                : "Enter your message..."
-              }
-              required
-              
-              className={`${
-                messageType === "custom" && formData.message.length > 280 
-                  ? "border-red-300 focus:border-red-500" 
-                  : ""
-              }`}
-            />
-            {messageType === "custom" && formData.message.length > 280 && (
-              <div className="text-sm text-red-600">
-                Message exceeds 280 character limit
-              </div>
-            )}
-          </div>
+          )}
           
           <DialogFooter>
             <Button

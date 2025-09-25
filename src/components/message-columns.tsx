@@ -528,7 +528,8 @@ export const createMessageColumns = ({
 
       const canEdit = message.status === "pending" && !message.aggregated
       const canDelete = message.status === "pending" || message.status === "failed"
-      const canDuplicate = !!onDuplicate && !message.aggregated && message.status !== "sent"
+      // Duplicate option removed per request
+      const canDuplicate = false
 
       return (
         <DropdownMenu>
