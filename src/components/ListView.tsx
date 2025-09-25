@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { ChevronDown, ChevronRight, Clock } from "lucide-react"
 import { DatePickerPopover } from "./ui/date-picker"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { toast } from "sonner"
 
 interface ListViewProps {
   studyBookId: Id<"studyBooks">
@@ -235,14 +236,19 @@ export function ListView({ studyBookId, studyBookTitle, hasGroupSelected }: List
     
     const lesson = lessonById[lessonId]
     const dateRange = getDateRangeForLesson(lesson)
+    
+    // Validate by calendar day (inclusive), not by time of day
+    const selectedDayStart = new Date(`${data.date}T00:00`).getTime()
+    const minDay = dateRange.min !== undefined ? new Date(dateRange.min).setHours(0, 0, 0, 0) : undefined
+    const maxDay = dateRange.max !== undefined ? new Date(dateRange.max).setHours(0, 0, 0, 0) : undefined
+    if ((minDay !== undefined && selectedDayStart < minDay) || (maxDay !== undefined && selectedDayStart > maxDay)) {
+      toast.error('Selected date is outside the allowed range for this lesson.')
+      return
+    }
+
     // Always use lesson's default time
     const lessonTime = lesson?.defaultSendTime || "06:30"
     const ts = combineLocalTs(data.date, lessonTime)
-    
-    if ((dateRange.min && ts < dateRange.min) || (dateRange.max && ts > dateRange.max)) {
-      setEditingStates(prev => ({ ...prev, [selectionId]: false }))
-      return
-    }
     
     try {
       await updateScheduling({
@@ -251,8 +257,10 @@ export function ListView({ studyBookId, studyBookTitle, hasGroupSelected }: List
         scheduledAt: ts
       })
       setEditingStates(prev => ({ ...prev, [selectionId]: false }))
+      toast.success('Scheduled date updated')
     } catch (e) {
       console.error('Error saving edit:', e)
+      toast.error('Failed to update scheduled date')
     }
   }
 
