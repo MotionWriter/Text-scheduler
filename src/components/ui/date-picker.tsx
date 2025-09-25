@@ -184,42 +184,6 @@ export function DatePickerPopover({
             document.body
           )
       )}
-          <div className="flex items-center justify-between mb-2">
-            <button type="button" disabled={!canGoPrev} onClick={goPrevMonth} className={["px-2 py-1 text-sm rounded", !canGoPrev ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"].join(" ")}>‹</button>
-            <div className="text-sm font-medium">
-              {new Date(viewYear, viewMonth, 1).toLocaleString(undefined, { month: 'long', year: 'numeric' })}
-            </div>
-            <button type="button" disabled={!canGoNext} onClick={goNextMonth} className={["px-2 py-1 text-sm rounded", !canGoNext ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"].join(" ")}>›</button>
-          </div>
-          <div className="grid grid-cols-7 gap-1 text-xs text-gray-500 mb-1">
-            {weekdays.map(d => (<div key={d} className="text-center">{d}</div>))}
-          </div>
-          <div className="grid grid-cols-7 gap-1">
-            {grid.map((d, idx) => {
-              if (!d) return <div key={idx} />
-              const ts = startOfDayTsLocal(d)
-              const disabled = (minTs !== undefined && ts < minTs) || (maxTs !== undefined && ts > maxTs)
-              const isSelected = !isNaN(selectedTs) && ts === selectedTs
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  disabled={disabled}
-                  onClick={() => { if (!disabled) { onChange(toDateStr(d)); setOpen(false) } }}
-                  className={[
-                    "h-8 w-8 text-sm rounded flex items-center justify-center",
-                    disabled ? "text-gray-300 cursor-not-allowed" : "hover:bg-blue-50",
-                    isSelected ? "bg-blue-600 text-white hover:bg-blue-600" : ""
-                  ].join(" ")}
-                  title={d.toDateString()}
-                >
-                  {d.getDate()}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
