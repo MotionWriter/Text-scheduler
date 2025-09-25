@@ -430,7 +430,7 @@ export function ListView({ studyBookId, studyBookTitle, hasGroupSelected }: List
 
               {/* Messages List */}
               {isExpanded && (
-                <div className="divide-y divide-gray-100 rounded-b-lg overflow-hidden">
+                <div className="divide-y divide-gray-100 rounded-b-lg">
                   {lesson.messages.map((message: any, index: number) => {
                     const isScheduled = scheduledMessageIds[message.source as keyof typeof scheduledMessageIds]?.has(message._id)
                     const selection = selectionByMessageId[message._id]
