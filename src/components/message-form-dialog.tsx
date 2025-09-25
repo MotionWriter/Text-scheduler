@@ -284,7 +284,7 @@ export function MessageFormDialog({
             <div className="space-y-2">
               <Label htmlFor="scheduledFor">Scheduled For *</Label>
               <div className="flex gap-2 items-center">
-                {messageType === "custom" && selectedLesson ? (
+                {(isEditing || (messageType === "custom" && selectedLesson)) ? (
                   <DatePickerPopover
                     value={scheduledDate}
                     onChange={(d) => {
@@ -292,8 +292,8 @@ export function MessageFormDialog({
                       const combined = d && scheduledTime ? `${d}T${scheduledTime}` : ""
                       setFormData(prev => ({ ...prev, scheduledFor: combined }))
                     }}
-                    minDate={minDate}
-                    maxDate={maxDate}
+                    minDate={selectedLesson ? minDate : undefined}
+                    maxDate={selectedLesson ? maxDate : undefined}
                     buttonClassName="w-[12rem] px-3 py-2 border rounded-md bg-white text-left"
                   />
                 ) : (
