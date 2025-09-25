@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import { createPortal } from "react-dom"
 
 function startOfDayTsLocal(d: Date) {
   const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate())
@@ -35,6 +36,7 @@ export function DatePickerPopover({
   const [open, setOpen] = React.useState(false)
   const containerRef = React.useRef<HTMLDivElement>(null)
   const [portalPos, setPortalPos] = React.useState<{ top: number; left: number } | null>(null)
+  const portalRef = React.useRef<HTMLDivElement | null>(null)
   const initial = value ? new Date(`${value}T00:00`) : new Date()
   const [viewYear, setViewYear] = React.useState(initial.getFullYear())
   const [viewMonth, setViewMonth] = React.useState(initial.getMonth()) // 0-11
@@ -60,7 +62,10 @@ export function DatePickerPopover({
     updatePos()
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      const clickedInsideTrigger = !!(containerRef.current && containerRef.current.contains(target))
+      const clickedInsidePortal = !!(portalRef.current && portalRef.current.contains(target as Node))
+      if (!clickedInsideTrigger && !clickedInsidePortal) {
         setOpen(false)
       }
     }
@@ -138,10 +143,9 @@ export function DatePickerPopover({
       <button type="button" className={buttonClassName} onClick={() => setOpen(o => !o)}>
         {value ? new Date(`${value}T00:00`).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : 'Select date'}
       </button>
-      {open && portalPos && typeof window !== 'undefined' && (
-        (typeof (window as any).document !== 'undefined') ? (
-          (require('react-dom') as typeof import('react-dom')).createPortal(
-            <div className="fixed z-[9999] w-[16rem] rounded-md border bg-white shadow-xl p-2" style={{ top: portalPos.top, left: portalPos.left }}>
+      {open && portalPos && typeof window !== 'undefined' && typeof document !== 'undefined' && (
+          createPortal(
+            <div ref={portalRef} className="fixed z-[9999] w-[16rem] rounded-md border bg-white shadow-xl p-2" style={{ top: portalPos.top, left: portalPos.left }}>
               <div className="flex items-center justify-between mb-2">
                 <button type="button" disabled={!canGoPrev} onClick={goPrevMonth} className={["px-2 py-1 text-sm rounded", !canGoPrev ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"].join(" ")}>‹</button>
                 <div className="text-sm font-medium">
@@ -179,7 +183,6 @@ export function DatePickerPopover({
             </div>,
             document.body
           )
-        ) : null
       )}
           <div className="flex items-center justify-between mb-2">
             <button type="button" disabled={!canGoPrev} onClick={goPrevMonth} className={["px-2 py-1 text-sm rounded", !canGoPrev ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"].join(" ")}>‹</button>
