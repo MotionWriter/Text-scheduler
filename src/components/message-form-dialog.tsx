@@ -88,6 +88,10 @@ export function MessageFormDialog({
   const msInDay = 24 * 60 * 60 * 1000
   const minDate = selectedLesson?.activeWeekStart ? selectedLesson.activeWeekStart - 4 * msInDay : undefined
   const maxDate = selectedLesson?.activeWeekStart ? selectedLesson.activeWeekStart + 6 * msInDay : undefined
+  // When editing, try to derive allowed window from the message's lesson (for predefined study messages)
+  const editActiveStart = (message as any)?.lesson?.activeWeekStart as number | undefined
+  const editMinDate = editActiveStart ? editActiveStart - 4 * msInDay : undefined
+  const editMaxDate = editActiveStart ? editActiveStart + 6 * msInDay : undefined
   const DEFAULT_FIXED_TIME = "06:30"
   const defaultTimeForLesson = isAdmin
     ? ((selectedLesson?.defaultSendTime as string) || DEFAULT_FIXED_TIME)
@@ -292,8 +296,8 @@ export function MessageFormDialog({
                       const combined = d && scheduledTime ? `${d}T${scheduledTime}` : ""
                       setFormData(prev => ({ ...prev, scheduledFor: combined }))
                     }}
-                    minDate={selectedLesson ? minDate : undefined}
-                    maxDate={selectedLesson ? maxDate : undefined}
+                    minDate={isEditing ? (selectedLesson ? minDate : editMinDate) : (selectedLesson ? minDate : undefined)}
+                    maxDate={isEditing ? (selectedLesson ? maxDate : editMaxDate) : (selectedLesson ? maxDate : undefined)}
                     buttonClassName="w-[12rem] px-3 py-2 border rounded-md bg-white text-left"
                   />
                 ) : (

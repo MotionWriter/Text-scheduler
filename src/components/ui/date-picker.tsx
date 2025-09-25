@@ -34,6 +34,7 @@ export function DatePickerPopover({
 }) {
   const [open, setOpen] = React.useState(false)
   const containerRef = React.useRef<HTMLDivElement>(null)
+  const [portalPos, setPortalPos] = React.useState<{ top: number; left: number } | null>(null)
   const initial = value ? new Date(`${value}T00:00`) : new Date()
   const [viewYear, setViewYear] = React.useState(initial.getFullYear())
   const [viewMonth, setViewMonth] = React.useState(initial.getMonth()) // 0-11
@@ -46,18 +47,32 @@ export function DatePickerPopover({
     }
   }, [value])
 
-  // Close on click outside
+  // Close on click outside and compute portal position
   React.useEffect(() => {
     if (!open) return
-    
+
+    const updatePos = () => {
+      const el = containerRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      setPortalPos({ top: rect.bottom + 8, left: rect.left })
+    }
+    updatePos()
+
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setOpen(false)
       }
     }
-    
+
+    window.addEventListener('scroll', updatePos, true)
+    window.addEventListener('resize', updatePos)
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    return () => {
+      window.removeEventListener('scroll', updatePos, true)
+      window.removeEventListener('resize', updatePos)
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
   }, [open])
 
   const firstDayOfMonth = new Date(viewYear, viewMonth, 1)
@@ -123,8 +138,49 @@ export function DatePickerPopover({
       <button type="button" className={buttonClassName} onClick={() => setOpen(o => !o)}>
         {value ? new Date(`${value}T00:00`).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : 'Select date'}
       </button>
-      {open && (
-        <div className="absolute z-[9999] mt-2 w-[16rem] rounded-md border bg-white shadow-xl p-2 left-0 top-full">
+      {open && portalPos && typeof window !== 'undefined' && (
+        (typeof (window as any).document !== 'undefined') ? (
+          (require('react-dom') as typeof import('react-dom')).createPortal(
+            <div className="fixed z-[9999] w-[16rem] rounded-md border bg-white shadow-xl p-2" style={{ top: portalPos.top, left: portalPos.left }}>
+              <div className="flex items-center justify-between mb-2">
+                <button type="button" disabled={!canGoPrev} onClick={goPrevMonth} className={["px-2 py-1 text-sm rounded", !canGoPrev ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"].join(" ")}>‹</button>
+                <div className="text-sm font-medium">
+                  {new Date(viewYear, viewMonth, 1).toLocaleString(undefined, { month: 'long', year: 'numeric' })}
+                </div>
+                <button type="button" disabled={!canGoNext} onClick={goNextMonth} className={["px-2 py-1 text-sm rounded", !canGoNext ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"].join(" ")}>›</button>
+              </div>
+              <div className="grid grid-cols-7 gap-1 text-xs text-gray-500 mb-1">
+                {weekdays.map(d => (<div key={d} className="text-center">{d}</div>))}
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {grid.map((d, idx) => {
+                  if (!d) return <div key={idx} />
+                  const ts = startOfDayTsLocal(d)
+                  const disabled = (minTs !== undefined && ts < minTs) || (maxTs !== undefined && ts > maxTs)
+                  const isSelected = !isNaN(selectedTs) && ts === selectedTs
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => { if (!disabled) { onChange(toDateStr(d)); setOpen(false) } }}
+                      className={[
+                        "h-8 w-8 text-sm rounded flex items-center justify-center",
+                        disabled ? "text-gray-300 cursor-not-allowed" : "hover:bg-blue-50",
+                        isSelected ? "bg-blue-600 text-white hover:bg-blue-600" : ""
+                      ].join(" ")}
+                      title={d.toDateString()}
+                    >
+                      {d.getDate()}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>,
+            document.body
+          )
+        ) : null
+      )}
           <div className="flex items-center justify-between mb-2">
             <button type="button" disabled={!canGoPrev} onClick={goPrevMonth} className={["px-2 py-1 text-sm rounded", !canGoPrev ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"].join(" ")}>‹</button>
             <div className="text-sm font-medium">
