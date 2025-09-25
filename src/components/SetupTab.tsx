@@ -160,9 +160,10 @@ export function SetupTab() {
               <div className="space-y-2 text-sm text-gray-700">
                 <p className="font-medium">Instructions:</p>
                 <ol className="list-decimal list-inside space-y-1 ml-4">
-                  <li>Open the Message Scheduler shortcut on your iPhone</li>
+                  <li>Copy this secret above.</li>
+                  <li>Go back to the Message Scheduler shortcut on your iPhone</li>
                   <li>When prompted for your secret password, paste the value above</li>
-                  <li>Save the shortcut configuration</li>
+                  <li>Click "Add Shortcut"</li>
                   <li>Return here and click "Continue to Test" below</li>
                 </ol>
               </div>
@@ -187,13 +188,12 @@ export function SetupTab() {
             
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-blue-800 mb-3">
-                Test Instructions:
+                Last Step, Connection Instructions:
               </h3>
               <ol className="list-decimal list-inside space-y-2 text-left text-blue-700">
                 <li>Open the Shortcuts app on your iPhone</li>
-                <li>Find the "Message Scheduler" shortcut</li>
-                <li>Tap to run the shortcut</li>
-                <li>The shortcut should successfully connect and show a confirmation</li>
+                <li>Find the "Message Scheduler" shortcut (If it didn't open up automatically)</li>
+                <li>Tap the play button to run the shortcut</li>
                 <li>Return to this page - it should automatically refresh and show you're verified</li>
               </ol>
             </div>
